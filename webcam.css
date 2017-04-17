@@ -1,0 +1,123 @@
+@CHARSET "ISO-8859-1";
+
+img
+{
+  width: auto ;
+  height: auto ;
+  max-width: 100%;
+}
+
+.allimages {
+	    width: 320px ;
+	    margin:10px;
+}
+
+a {
+	text-decoration: none;
+	color:black;
+}
+
+button {
+	padding:8px;
+	margin:3px;
+	border-radius:10px;
+	border-style: none;
+    -webkit-transition-duration: 0.7s; 
+    transition-duration: 0.7s;
+}
+
+button:hover {
+	background-color: #aaaaaa;
+}
+
+#copyright {
+	font-size: 8px;
+}
+
+#title {
+	font-size: 26px;
+	background-color: lightgray; 
+	padding: 10px; 
+	border-top-left-radius: 9px;
+	border-top-right-radius: 9px;
+	overflow-y: hidden;
+}
+
+#camimage {
+	text-align:center;
+	background-color: lightgray;
+}
+
+.footer {
+	background-color: lightgray; 
+	padding: 5px; 
+	border-bottom-left-radius: 9px;
+	border-bottom-right-radius: 9px;
+	width: auto !important;
+	
+}
+
+#type {
+	margin-left:40px;
+	font-size: 16px;
+	display:inline-block;
+	float: right;
+	margin-top:10px;
+}
+
+.toolbar {
+	background-color: lightgray; 
+	padding: 5px; 
+	width: auto !important;
+}
+
+#count, #range {
+	background: black;
+	color:white;
+	padding:4px;
+	border-radius:10px;
+}
+
+.password {
+	width:80px;
+	height:30px;
+	font-size: 17px;
+	border-radius:10px;
+}
+
+#password_div {
+	background-color:lightgray;
+	width: 376px;
+    text-align: center;
+    margin-top: 10px;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#slider, #actionslider {
+	margin:10px;
+}
+
+#camname {
+	height: 30px;
+    border-radius: 10px;
+    background-color: white;
+}
+
+#clearboth{
+	clear:both;
+}
+
+/*Calendar*/
+
+.calendarDiv {text-align: center; background-color: lightgray;}
+.calendarBody {display: inline-block; margin:5px;padding:3px;min-height:100px; border-radius: 10px; background-color: #eeeeee}
+.calendarCell {min-width: 25px;min-height: 10px; text-align: center; margin:3px};
+.calendarDays {background-color: bisque;}
+.calendarDay {background-color: lightgreen;}
+.calendarDayNo1 {background-color: #ffe030;}
+.calendarDayNo2 {background-color: #ffac30;}
+.calendarDayNo3 {background-color: #ff3030;}
+.calendarToday {font-weight: bold;border-style: solid; border-width:2px; }
+.calendarLegend {padding: 5px;}
+.calenderAktDay {border-radius: 29px;border-color: red;border-style: inset;border-width: 2px;}
