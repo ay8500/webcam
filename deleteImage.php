@@ -26,9 +26,11 @@ if ($password!=Constants::PASSW_ROOT) {
 
 if (unlink($filename)) {
 	header("HTTP/1.0 200 OK");
+	//logger("delete file File:".$filename,loggerLevel::info);
 	echo(json_encode("Ok"));
 } else {
 	header("HTTP/1.0 400 Bad Request");
+	//logger("delete file File:".$filename,loggerLevel::error);
 	echo(json_encode("Error"));
 }
 	

@@ -20,7 +20,7 @@ include_once 'logger.class.php';
 setLoggerType(loggerType::file);
 $userRight=isUserRoot()?'R':'';
 $userRight.=isUserView()?'W':'';
-logger("Date:".$day->format("Ymd")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRight,loggerLevel::debug);
+logger("Date:".$day->format("Ymd")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRight,loggerLevel::info);
 
 if ($action=="deleteday" && isUserRoot()) {
 	foreach (Constants::IMAGE_PATH() as $cn=>$imgPath) {
@@ -39,7 +39,7 @@ if ($action=="deleteday" && isUserRoot()) {
 	}
 	$directory->close();
 	$systemMessage="Files deleted:".$fileDeletedCount;
-	logger("deleteFiles Date:".$day->format("Ymd")." Count:".$fileDeletedCount,loggerLevel::debug);
+	logger("deleteFiles Date:".$day->format("Ymd")." Count:".$fileDeletedCount,loggerLevel::info);
 }
 
 
@@ -139,6 +139,7 @@ if ($action=="deleteday" && isUserRoot()) {
 			<span title="Range" id="range">0</span>
 			<button onclick="deleteRange();">Delete range</button>
 			<button onclick="animateRange();">Animate range</button>
+			<button onclick="showLogs()">Show logs</button>
 		<?php endif;?>
 		<button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))">Enter password</button>
 		<button onclick="showCamImages()">Refresh pictures</button>
@@ -369,6 +370,10 @@ if ($action=="deleteday" && isUserRoot()) {
 		for (var i=0; i<cams.length; i++) {
 			$("#image_"+cams[i]).remove();
 		}
+	}
+
+	function showLogs() {
+	    window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
 	}
 	
 	function dayBefore() {
