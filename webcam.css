@@ -121,3 +121,4 @@ button:hover {
 .calendarToday {font-weight: bold;border-style: solid; border-width:2px; }
 .calendarLegend {padding: 5px;}
 .calenderAktDay {border-radius: 29px;border-color: red;border-style: inset;border-width: 2px;}
+.calendarDayDisabled{background-color: #eeeeee;color:#888888}

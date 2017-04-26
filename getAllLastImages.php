@@ -10,7 +10,7 @@ $filter=".";
 
 $idx=0;
 
-foreach (Constants::IMAGE_PATH as $camName=>$imgPath) {
+foreach (Constants::IMAGE_PATH() as $camName=>$imgPath) {
 	$path ="./".$imgPath;
 	$directory = dir($path);
 	$latest_ctime = 0;

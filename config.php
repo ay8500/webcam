@@ -1,12 +1,21 @@
 <?php
 class Constants
 {
-	const TITLE="Webcam: Ebnisee";
+	const TITLE="Webcam: Localhost";
 	
 	//The value for foscam should be "CameraName"->"CameraType_xxxxxxxxxxxx/snap/"
-	const IMAGE_PATH=array(	 "Kamera1"=>"images/snap1/"
-							,"Kamera2"=>"images/snap2/"
-							);
+						
+	public function IMAGE_PATH() {
+		return array( "Kamera1"=>"images/snap1/"
+					,"Kamera2"=>"images/snap2/"
+		);
+	}
+						
+	
+	//Display calendar minimal and maximal months refered to now. Example -3,2 will display 6 months
+	const CALENDAR_MIN_DISPLAY=-3;
+	const CALENDAR_MAX_DISPLAY=0;
+	
 	
 	//Empty string for SNAP will not show snapshot pictures
 	//For Foscam the value sould be: "Schedule_" 

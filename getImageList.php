@@ -27,7 +27,8 @@ $images_array= array();
 
 if(isUserOk()) {
 	$filter=$type.date_format($day, 'Ymd');
-	$path="./".Constants::IMAGE_PATH[$camname];
+	$ip=Constants::IMAGE_PATH();
+	$path="./".$ip[$camname];
 	$directory = dir($path);	
 	$idx=0;
 	while ($file = $directory->read()) {

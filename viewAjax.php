@@ -1,24 +1,48 @@
 <?PHP 
 include 'config.php';
 
-function isUserRoot() {
-	return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_ROOT;
+if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
+
+if (isset($_GET["type"])) $camType = $_GET["type"]; else $camType=Constants::SNAP;
+	
+if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); else $day=new DateTime();
+
+if (isset($_GET["action"])) $action = $_GET["action"]; else $action="";
+
+$daydec=clone $day; $daydec->modify('+1 day');
+$dayinc=clone $day; $dayinc->modify('-1 day');
+
+$scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
+$script=$scriptArray[sizeof($scriptArray)-1];
+
+$systemMessage="";
+include_once 'logger.class.php';
+setLoggerType(loggerType::file);
+$userRight=isUserRoot()?'R':'';
+$userRight.=isUserView()?'W':'';
+logger("Date:".$day->format("Ymd")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRight,loggerLevel::debug);
+
+if ($action=="deleteday" && isUserRoot()) {
+	foreach (Constants::IMAGE_PATH() as $cn=>$imgPath) {
+		if ($cn==$camName) {
+			$camPath=$imgPath;
+		}
+	}
+	$path="./".$camPath;
+	$directory = dir($path);$fileDeletedCount=0;
+	while ($file = $directory->read()) {
+		if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
+		  strstr($file,$camType) && strstr($file,$day->format("Ymd"))  	) {
+		  	unlink($path.$file);
+		  	$fileDeletedCount++;
+		  }
+	}
+	$directory->close();
+	$systemMessage="Files deleted:".$fileDeletedCount;
+	logger("deleteFiles Date:".$day->format("Ymd")." Count:".$fileDeletedCount,loggerLevel::debug);
 }
 
-if (isset($_GET["cam"])) 
-	$camName = $_GET["cam"]; 
-else 
-	$camName="all";
 
-if (isset($_GET["type"]))
-	$camType = $_GET["type"];
-else
-	$camType=Constants::SNAP;
-	
-if (isset($_GET['day']) && $_GET['day']!="" )
-	$day=new DateTime($_GET['day']);
-else
-	$day=new DateTime();
 ?>
 <html>
 <head>
@@ -31,14 +55,20 @@ else
 	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 </head>
 <body>
+	<?php if ($systemMessage!="") :?>
+		<div>
+			<?php echo ($systemMessage);?>
+		</div>
+	<?php endif;?>
 	<div id="title"><?php echo Constants::TITLE?>
 		<div id="type">
 			<form>
 				<input type="hidden" name="day" value="<?php echo date_format($day, 'Y-n-j') ?>" />
 				Cam:
+				
 				<select id="camname" name="cam" onchange="submit()">
 					<option value="all" >all</option>
-					<?php foreach (Constants::IMAGE_PATH as $camn=>$imgPath) {
+					<?php foreach (Constants::IMAGE_PATH() as $camn=>$imgPath) {
 						if ($camn==$camName) {
 							$camPath=$imgPath;
 							echo('<option selected value="'.$camn.'">'.$camn.'</option>');
@@ -73,9 +103,11 @@ else
 			<?php
 				require_once("calendar.class.php");
 				$cal = new calendar();
-			?>
-			<div class="calendarBody"> <?php $cal->showCalendar(date("Y"),date("n")-1,$camType,$camName,getBookedDays($camPath,$camType,date("Y"),date("n")-1)); ?></div>
-			<div class="calendarBody"> <?php $cal->showCalendar(date("Y"),date("n"),$camType,$camName,getBookedDays($camPath,$camType,date("Y"),date("n"))); ?></div>
+				for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
+					<div class="calendarBody"> 
+						<?php $cal->showCalendar(0,$i,$camType,$camName,getBookedDays($camPath,$camType,0,$i),array(),$day); ?>
+					</div>
+			<?php }  ?>
 		</div>
 	<?php } ?>
 	<div class="toolbar" id="tollbartop">
@@ -91,7 +123,8 @@ else
 		</div>
 		&nbsp;&nbsp;&nbsp;&nbsp;
 		<?php if (isUserRoot()):?>
-			<button name="action" value="delete" onclick="deleteImage();" title="Attention: the aktual picture will be deleted!">Delete</button>
+			<button name="action" value="delete" onclick="deleteImage();" title="Attention: the aktual picture will be deleted!">Delete Image</button>
+			<button name="action" value="deleteday" onclick="deleteDay();" title="Attention: all pictures for the actual day will be deleted!">Delete Day</button>
 		<?php endif;?>
 		<span id="count" title="The aktual picture and the number of pictures">0</span>
 	</div>
@@ -210,6 +243,13 @@ else
 		 });
 	}
 
+	//delete day images
+	function deleteDay() {
+		if (confirm("Please confirm, thas you want to delete all images from the selected day?") ) {
+		    window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+		}
+	}
+
 	//check if old images should be deleted
 	function deleteOldImages() {
 		var olderThanDays=<?php echo Constants::AUTO_DELETE_OLDER_THAN_DAYS?>;
@@ -303,8 +343,8 @@ else
 				$("#range").hide();
 				$("#imagetype").hide();
 				var cams= new Array;
-				<?php foreach (Constants::IMAGE_PATH as $camName=>$imgPath) {?>
-					cams.push('<?php echo $camName ?>');
+				<?php foreach (Constants::IMAGE_PATH() as $cn=>$imgPath) {?>
+					cams.push('<?php echo $cn ?>');
 				<?php } ?>
 				$("#image").css("display","none");
 				for (var i=0; i<cams.length; i++) {
@@ -318,8 +358,8 @@ else
 
 	function hideAllLastImages() {
 		var cams= new Array;
-		<?php foreach (Constants::IMAGE_PATH as $camName=>$imgPath) {?>
-			cams.push('<?php echo $camName ?>');
+		<?php foreach (Constants::IMAGE_PATH() as $cn=>$imgPath) {?>
+			cams.push('<?php echo $cn ?>');
 		<?php } ?>
 		$("#image").css("display","block");
 		$("#tollbardate").show();
@@ -332,18 +372,15 @@ else
 	}
 	
 	function dayBefore() {
-		date.addDays(-1);
-		showCamImages();
+	    window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType.'&day='.date_format($daydec, 'Y-n-j'))?>";
 	}
 
 	function dayAfter() {
-		date.addDays(+1);
-		showCamImages();
+	    window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType.'&day='.date_format($dayinc, 'Y-n-j'))?>";
 	}
 
 	function dayToday() {
-	    date = new Date();
-		showCamImages();
+	    window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType)?>";
 	}
 
 	function imageOlder() {
@@ -438,6 +475,7 @@ else
 	
 </script>
 
+
 <?php 
 
 /**
@@ -447,25 +485,20 @@ else
  * @param number $year
  * @param number $month
  */
-function getBookedDays($path,$type,$year=0,$month=0){
-	$ret=array();
-	// Get today, reference day, first day and last day info
-	if (($year == 0) || ($month == 0)){
-		$referenceDay    = getdate();
-	} else {
-		$referenceDay    = getdate(mktime(0,0,0,$month,1,$year));
-	}
-	$firstDay = date_create();
 
-	date_timestamp_set($firstDay, mktime(0,0,0,$referenceDay['mon'],1,$referenceDay['year']));
-	for ($i=1;$i<32;$i++) {
-		$c=getFileCount($firstDay,$path,$type);
-		if ($c>0) {
-			$ret[$i]=$c;
-		}
-		date_add($firstDay, date_interval_create_from_date_string('1 days'));
+function getBookedDays($path,$type,$year=0,$month=0){
+	
+	if ($year == 0) {
+		$referenceDay    = new DateTime(date("Y")."-".date("n")."-1");
+		if ($month>0)
+			$referenceDay->modify('+'.$month.' month');
+		else
+			$referenceDay->modify($month.' month');
+	} else {
+		$referenceDay    = mktime(0,0,0,$month,1,$year);
 	}
-	return $ret;
+	
+	return getFileCount($referenceDay,$path,$type);
 }
 
 /**
@@ -475,18 +508,57 @@ function getBookedDays($path,$type,$year=0,$month=0){
  * @param unknown $type
  * @return number
  */
-function getFileCount($day,$path,$type) {
-	$filter=$type.date_format($day, 'Ymd');
+function getFileCount($startday,$path,$type) {
+	$ret = array();
+	
 	$directory = dir($path);	
-	$idx=0;
-	while ($file = $directory->read()) {
-		if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
-		  strstr($file,$filter) ) {
-			$idx++;
+	while (false !== ($file = $directory->read())) {
+		$dayfilter=$startday->format('Ym');
+		$filter=$type.$dayfilter;
+		if ( strstr($file,$filter) ) {
+			for ($i=1;$i<10;$i++) {
+				if (strstr($file,$dayfilter.'0'.$i) ) 
+					if (isset($ret[$i])) $ret[$i] +=1;	else$ret[$i] =1;
+			}
+			for ($i=10;$i<32;$i++) {
+				if (strstr($file,$dayfilter.$i) ) 
+					if (isset($ret[$i])) $ret[$i] +=1;	else$ret[$i] =1;
+			}
+			
 		}
-		
 	}
 	$directory->close();
-	return $idx;
+	
+	/*
+	$startTS=strtotime($startday->format('Y-m-d'));
+	$endday=clone($startday);$endday->modify('+1 month');
+	$endTS=strtotime($endday->format('Y-m-d'));
+	foreach (new DirectoryIterator($path) as $fileInfo) {
+		if($fileInfo->isDot()) continue;
+		$time=$fileInfo->getMTime();
+		if ($time>=$startTS && $time<$endTS) {
+			$date=  new DateTime(date("c",$time));
+			$i=$date->format("j");
+			if (isset($ret[$i]))
+				$ret[$i] +=1;
+			else
+				$ret[$i] =1;
+		}
+	}
+	*/
+	return $ret;
 }
+
+/*
+ * Check if the user is root
+ */
+function isUserRoot() {
+	return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_ROOT;
+}
+
+function isUserView() {
+	return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_VIEW;
+}
+	
+
 ?>
