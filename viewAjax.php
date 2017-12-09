@@ -9,8 +9,8 @@ if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); e
 
 if (isset($_GET["action"])) $action = $_GET["action"]; else $action="";
 
-$daydec=clone $day; $daydec->modify('+1 day');
-$dayinc=clone $day; $dayinc->modify('-1 day');
+$dayinc=clone $day; $daydec->modify('+1 day');
+$daydec=clone $day; $dayinc->modify('-1 day');
 
 $scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
 $script=$scriptArray[sizeof($scriptArray)-1];
