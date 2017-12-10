@@ -1,43 +1,58 @@
 <?PHP 
 include 'config.php';
+include_once 'zipImages.php';
+include_once 'logger.class.php';
+include_once 'bifi.class.php';
+setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
-
 if (isset($_GET["type"])) $camType = $_GET["type"]; else $camType=Constants::SNAP;
-	
 if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); else $day=new DateTime();
-
 if (isset($_GET["action"])) $action = $_GET["action"]; else $action="";
 
-$dayinc=clone $day; $daydec->modify('+1 day');
-$daydec=clone $day; $dayinc->modify('-1 day');
+$daydec=clone $day; $daydec->modify('+1 day');
+$dayinc=clone $day; $dayinc->modify('-1 day');
 
 $scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
 $script=$scriptArray[sizeof($scriptArray)-1];
 
 $systemMessage="";
-include_once 'logger.class.php';
-setLoggerType(loggerType::file);
 $userRight=isUserRoot()?'R':'';
 $userRight.=isUserView()?'W':'';
 logger("Date:".$day->format("Ymd")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRight,loggerLevel::info);
 
+
+//Zip the files in one zipfile per day
+if ($action=="zipImages" && isUserRoot()) {
+	$zip=zipImages($camName);
+	$systemMessage="Files zipped:".$zip->filesZipped." deleted:".$zip->deleted." days:".$zip->daysZipped;
+	logger("Files Zipped Date:".$day->format("Ymd")." files:".$zip->filesZipped." deleted:".$zip->deleted." days:".$zip->daysZipped,loggerLevel::info);
+}
+
+
 if ($action=="deleteday" && isUserRoot()) {
+	//Get the path of the camera
 	foreach (Constants::IMAGE_PATH() as $cn=>$imgPath) {
 		if ($cn==$camName) {
 			$camPath=$imgPath;
 		}
 	}
-	$path="./".$camPath;
+	//Server path
+	$path=Constants::IMAGE_ROOT_PATH.$camPath;
 	$directory = dir($path);$fileDeletedCount=0;
-	while ($file = $directory->read()) {
-		if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
-		  strstr($file,$camType) && strstr($file,$day->format("Ymd"))  	) {
-		  	unlink($path.$file);
-		  	$fileDeletedCount++;
-		  }
+	if (Constants::ZIPFILES) {
+		//TODO
+		;
+	} else {
+		while ($file = $directory->read()) {
+			if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
+			  strstr($file,$camType) && strstr($file,$day->format("Ymd"))  	) {
+			  	unlink($path.$file);
+			  	$fileDeletedCount++;
+			  }
+		}
+		$directory->close();
 	}
-	$directory->close();
 	$systemMessage="Files deleted:".$fileDeletedCount;
 	logger("deleteFiles Date:".$day->format("Ymd")." Count:".$fileDeletedCount,loggerLevel::info);
 }
@@ -123,6 +138,7 @@ if ($action=="deleteday" && isUserRoot()) {
 		</div>
 		&nbsp;&nbsp;&nbsp;&nbsp;
 		<?php if (isUserRoot()):?>
+			<button name="action" value="zipImages" onclick="zipImages();" title="Attention: all pictures will be zipped!">Zip images</button>
 			<button name="action" value="delete" onclick="deleteImage();" title="Attention: the aktual picture will be deleted!">Delete Image</button>
 			<button name="action" value="deleteday" onclick="deleteDay();" title="Attention: all pictures for the actual day will be deleted!">Delete Day</button>
 		<?php endif;?>
@@ -220,7 +236,11 @@ if ($action=="deleteday" && isUserRoot()) {
 		if (deleteBegin>=0 && deleteEnd>=0 && deleteBegin<=deleteEnd)
 			aktualImageIdx=deleteBegin;
 		$.ajax({
-		    url: "deleteImage.php?filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+			<?php if (Constants::ZIPFILES) {?>
+				url: "deleteZipImage.php?day=<?php echo $day->format("Ymd");?>&camname=<?php echo $camName;?>&filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+			<?php } else {?>
+		    	url: "deleteImage.php?filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+		    <?php } ?>
 		    success:function(data){
 			    imageList.splice(aktualImageIdx, 1);
 			    if (aktualImageIdx>imageList.length-1) //darauf achten, dass der Index des aktuellen Bildes immer im bereich des Arrays liegt. 
@@ -246,13 +266,20 @@ if ($action=="deleteday" && isUserRoot()) {
 
 	//delete day images
 	function deleteDay() {
-		if (confirm("Please confirm, thas you want to delete all images from the selected day?") ) {
+		if (confirm("Please confirm, that you want to delete all images from the selected day?") ) {
 		    window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
 		}
 	}
 
+	function zipImages() {
+		if (confirm("Please confirm, that you want to zip all images from the selected camera?") ) {
+		    window.location.href="<?php echo ( $script.'?action=zipImages&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+		}
+	}
+	
 	//check if old images should be deleted
 	function deleteOldImages() {
+		<?php if (Constants::AUTO_DELETE_OLDER_THAN_DAYS>0) {?>
 		var olderThanDays=<?php echo Constants::AUTO_DELETE_OLDER_THAN_DAYS?>;
 		$("#message").html("Checking for older images then "+olderThanDays+" days");
 		var deleteList= new Array;
@@ -268,8 +295,12 @@ if ($action=="deleteday" && isUserRoot()) {
 			    }
 		    }
 		});
+		<?php } else {?>
+			;
+		<?php } ?>
 	}
 
+	<?php if (Constants::AUTO_DELETE_OLDER_THAN_DAYS>0) {?>
 	//calls an ajax funtion to delete old pictures defined in config.php
 	function deleteFiles() {
 		$.ajax({
@@ -279,6 +310,7 @@ if ($action=="deleteday" && isUserRoot()) {
 		    }
 		});
 	}
+	<?php } ?>
 		
 
 	//Show images called by changing the camera or image type
@@ -324,7 +356,11 @@ if ($action=="deleteday" && isUserRoot()) {
 	function showImage() {
 	    $("#akt_image").html(getTime(imageList[aktualImageIdx]));
 	    if (imageList.length>aktualImageIdx) {
-	    	$("#image").attr("src",imageList[aktualImageIdx]);
+		    <?php if (Constants::ZIPFILES) { ?>
+		    	$("#image").attr("src","getZipCamImage.php?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx]);
+		    <?php } else {?>
+		    	$("#image").attr("src",imageList[aktualImageIdx]);
+		    <?php } ?>
 	    	$("#image").css("opacity","1");
 	    } else {
 			$("#image").attr("src","");
@@ -351,7 +387,11 @@ if ($action=="deleteday" && isUserRoot()) {
 				for (var i=0; i<cams.length; i++) {
 					$("#image_"+cams[i]).remove();
 					$( "#image" ).after( '<a href="<?php "./".$_SERVER["SCRIPT_NAME"]?>?cam='+cams[i]+'" title="'+cams[i]+'"><img class="allimages" id="image_'+cams[i]+'" ></a>' );
-					$("#image_"+cams[i]).attr("src",data[cams[i]]);
+					<?php if (Constants::ZIPFILES) {?>
+						$("#image_"+cams[i]).attr("src","getZipCamImage.php?camname="+cams[i]+"&date="+data[cams[i]]["date"]+"&imagename="+data[cams[i]]["name"]);
+					<?php } else {?>
+						$("#image_"+cams[i]).attr("src",data[cams[i]]);
+					<?php }?>
 				}
 		    }
 		});
@@ -515,42 +555,39 @@ function getBookedDays($path,$type,$year=0,$month=0){
  */
 function getFileCount($startday,$path,$type) {
 	$ret = array();
-	
-	$directory = dir($path);	
-	while (false !== ($file = $directory->read())) {
-		$dayfilter=$startday->format('Ym');
-		$filter=$type.$dayfilter;
-		if ( strstr($file,$filter) ) {
-			for ($i=1;$i<10;$i++) {
-				if (strstr($file,$dayfilter.'0'.$i) ) 
-					if (isset($ret[$i])) $ret[$i] +=1;	else$ret[$i] =1;
+	if (Constants::ZIPFILES) {
+		$dateStart=$startday->format('Ym');
+		for($day=1;$day<32;$day++) {
+			$zip = new BiFi();
+			$fzip=Constants::IMAGE_ROOT_PATH.$path."cam".$dateStart.($day<10?"0".$day:$day).".zip";
+			if ($zip->open($fzip)) {
+				for ($i=0; $i<$zip->numFiles;$i++) {
+					if (strstr($zip->statIndex($i)['name'],$type))  {
+						if (isset($ret[$day])) $ret[$day] +=1; else $ret[$day] =1;
+					}
+				}
+				$zip->close();
 			}
-			for ($i=10;$i<32;$i++) {
-				if (strstr($file,$dayfilter.$i) ) 
-					if (isset($ret[$i])) $ret[$i] +=1;	else$ret[$i] =1;
+		}
+	} else {
+		$directory = dir(Constants::IMAGE_ROOT_PATH.$path);	
+		while (false !== ($file = $directory->read())) {
+			$dayfilter=$startday->format('Ym');
+			$filter=$type.$dayfilter;
+			if ( strstr($file,$filter) ) {
+				for ($i=1;$i<10;$i++) {
+					if (strstr($file,$dayfilter.'0'.$i) ) 
+						if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
+				}
+				for ($i=10;$i<32;$i++) {
+					if (strstr($file,$dayfilter.$i) ) 
+						if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
+				}
+				
 			}
-			
 		}
+		$directory->close();
 	}
-	$directory->close();
-	
-	/*
-	$startTS=strtotime($startday->format('Y-m-d'));
-	$endday=clone($startday);$endday->modify('+1 month');
-	$endTS=strtotime($endday->format('Y-m-d'));
-	foreach (new DirectoryIterator($path) as $fileInfo) {
-		if($fileInfo->isDot()) continue;
-		$time=$fileInfo->getMTime();
-		if ($time>=$startTS && $time<$endTS) {
-			$date=  new DateTime(date("c",$time));
-			$i=$date->format("j");
-			if (isset($ret[$i]))
-				$ret[$i] +=1;
-			else
-				$ret[$i] =1;
-		}
-	}
-	*/
 	return $ret;
 }
 

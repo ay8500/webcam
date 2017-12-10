@@ -1,5 +1,6 @@
 <?php
 include 'config.php';
+include_once 'bifi.class.php';
 
 header('Content-Type: application/json');
 
@@ -7,8 +8,9 @@ header('Content-Type: application/json');
 if (isset($_GET['camname']))
 	$camname=$_GET['camname'];
 else {
+	echo("Parameter camname ist empty");
 	header("HTTP/1.0 400 Bad Request");
-	die;
+die;
 }
 
 
@@ -26,27 +28,38 @@ else
 $images_array= array();
 
 if(isUserOk()) {
-	$filter=$type.date_format($day, 'Ymd');
+	$filter=$type;
 	$ip=Constants::IMAGE_PATH();
-	$path="./".$ip[$camname];
-	$directory = dir($path);	
+	$path=Constants::IMAGE_ROOT_PATH.$ip[$camname];
 	$idx=0;
-	while ($file = $directory->read()) {
-		if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
-		  strstr($file,$filter) ) {
-			$images_array[$idx] = $path.$file;	
-			$idx++;
+	if (Constants::ZIPFILES) {
+		$zip = new BiFi();
+		$fzip=$path."cam".date_format($day, 'Ymd').".zip";
+		if ($zip->open($fzip)) {
+			for ($i=0; $i<$zip->numFiles;$i++) {
+				if (strstr($zip->statIndex($i)['name'],$filter))  {
+			    	$images_array[$idx++] = $zip->statIndex($i)['name'];
+				}
+			}	
 		}
-		
+	} else {
+		$directory = dir($path);	
+		while ($file = $directory->read()) {
+			if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
+			  strstr($file,$filter) ) {
+				$images_array[$idx++] = Constants::IMAGE_URL().$ip[$camname].$file;	
+			}
+			
+		}
+		$directory->close();
 	}
-	$directory->close();
 	rsort($images_array);
+	echo(json_encode($images_array));
 }
 else {
 	$images_array[0] = "./password.jpg";
 }
 
-echo(json_encode($images_array));
 
 function isUserOk() {
 	return isset($_COOKIE["password"]) && ( $_COOKIE["password"]==Constants::PASSW_ROOT || $_COOKIE["password"]==Constants::PASSW_VIEW );

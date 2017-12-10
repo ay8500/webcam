@@ -18,11 +18,11 @@ class loggerType
 
 //Default loggerLevel setzen
 if (!isset($_SESSION['loggerLevel']))
-    $_SESSION['loggerLevel']=loggerLevel::debug.loggerLevel::info.loggerLevel::error;
+    setLoggerLevel(loggerLevel::debug.loggerLevel::info.loggerLevel::error);
 
 //Default loggerType setzen
 if (!isset($_SESSION['loggerType']))
-    $_SESSION['loggerType']=loggerType::html;
+    setLoggerType(loggerType::file);
 
 //LoggerLevel aus der Sessiom
 function setLoggerLevel($loggerLevel) {
@@ -30,8 +30,9 @@ function setLoggerLevel($loggerLevel) {
 }
 
 //LoggerType aus der Session
-function setLoggerType($loggerType) {
+function setLoggerType($loggerType,$logFileName="log") {
     $_SESSION['loggerType']=$loggerType;
+    $_SESSION['loggerFileName']=$logFileName;
 }
 
 //Text Loggen
@@ -47,7 +48,7 @@ function logger($text, $level=loggerLevel::info) {
 }
 
 //Text Loggen wenn condition falsch, dann als Fehler
-//Condition wird unver�ndert zur�ck gegeben
+//Condition wird unverändert zurück gegeben
 function loggerConditioned($condition, $text, $level=loggerLevel::debug) {
 	if (strrpos ($_SESSION['loggerLevel'],$level)>-1) {
 		if ($_SESSION['loggerType']==loggerType::html) {
@@ -76,8 +77,9 @@ function loggerArray($arr, $level=loggerLevel::info) {
 		   echo("</table>");
 		 }
 		if ($_SESSION['loggerType']==loggerType::file) {
-			//TODO
-			logToFile("Array logger not impelented",$level);
+			foreach($arr as $key=>$value) {
+				logToFile("Array:".$key."=".$value,$level);
+		   	}
 		}
 	}
 }
@@ -104,29 +106,26 @@ function loggerTable($table, $level=loggerLevel::info) {
 			}
 		}
 		if ($_SESSION['loggerType']==loggerType::file) {
-			if (count($table)>0) {
-				foreach($table as $qkey=>$arr) {
-					$line="Line:".$qkey.";";
-					foreach($arr as $key=>$value) {
-						$line .=$key.":".$value.",";
-					}
-					logToFile($line,$level);
-				}
-			}
+			logToFile(json_encode((object)$table),$level);
 		}
 	}
 }
 
 function logToFile($logText,$level){
-	$file = './log';
 	$text =date('Y-m-d H:i:s')."\t";
-	$text .=$_SERVER["REMOTE_ADDR"]."\t";
+	$text .=$level."\t";
+	$text .=(isset($_SERVER["REMOTE_ADDR"])?$_SERVER["REMOTE_ADDR"]:"")."\t";
+	$text .=$_SERVER["SCRIPT_NAME"]."\t";
 	if (isset($_SESSION['USER']))
 		$text .=$_SESSION['USER']."\t";
-	$text .=$level."\t";
 	$text .=$logText."\t";
 	$text .= "\r\n";
-	file_put_contents($file, $text, FILE_APPEND | LOCK_UN);
+	if (isset($_SESSION['loggerFileName'])) {
+		file_put_contents($_SESSION['loggerFileName'], $text, FILE_APPEND | LOCK_UN);
+		
+	} else {
+		file_put_contents('log', $text, FILE_APPEND | LOCK_UN);
+	}
 }
 
 

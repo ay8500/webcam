@@ -22,15 +22,14 @@ if ($password!=Constants::PASSW_ROOT) {
 	die ("Wrong Password");
 }
 
-
+$filename=str_replace(Constants::IMAGE_URL(), Constants::IMAGE_ROOT_PATH, $filename);
 
 if (unlink($filename)) {
 	header("HTTP/1.0 200 OK");
-	//logger("delete file File:".$filename,loggerLevel::info);
 	echo(json_encode("Ok"));
 } else {
+	echo("File:".$filename." not deleted!");
 	header("HTTP/1.0 400 Bad Request");
-	//logger("delete file File:".$filename,loggerLevel::error);
 	echo(json_encode("Error"));
 }
 	

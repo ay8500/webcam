@@ -9,20 +9,16 @@ if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); e
 
 if (isset($_GET["action"])) $action = $_GET["action"]; else $action="";
 
-$daydec=clone $day; $daydec->modify('+1 day');
-$dayinc=clone $day; $dayinc->modify('-1 day');
-$year=$day->format('Y');
-$month=$day->format('j');
-
 $scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
 $script=$scriptArray[sizeof($scriptArray)-1];
 
 $systemMessage="";
 include_once 'logger.class.php';
-setLoggerType(loggerType::file);
-logger("LogDate:".$day->format("Ymd"),loggerLevel::debug);
+setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+
 
 if ($action=="deletelogday" && isUserRoot()) {
+	//TODO
 	$count=0;
 	logger("deleteLog Date:".$day->format("Ymd")." Count:".$count,loggerLevel::debug);
 }
@@ -38,6 +34,9 @@ if ($action=="deletelogday" && isUserRoot()) {
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" ></script>
 	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
 	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 	<?php if ($systemMessage!="") :?>
@@ -54,7 +53,7 @@ if ($action=="deletelogday" && isUserRoot()) {
 				<div class="calendarBody"> 
 					<?php $cal->showCalendar(0,$i,$camType,$camName,getBookedDays(0,$i),array(),$day); ?>
 				</div>
-		<?php }  ?>
+		<?php } ?>
 	</div>
 	<div class="toolbar" id="tollbartop">
 		<?php if (isUserRoot()):?>
@@ -81,6 +80,24 @@ if ($action=="deletelogday" && isUserRoot()) {
 		<button onclick="$('#password').attr('type', 'text');">Show</button>
 		<button onclick="$('#password_div').slideUp('slow');">Cancel</button>
 	</div>
+	  <!-- Modal -->
+	  <div class="modal fade" id="myModal" role="dialog">
+	    <div class="modal-dialog">
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal">&times;</button>
+	          <h4 class="modal-title"></h4>
+	        </div>
+	        <div class="modal-body">
+	          <p></p>
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	
 </body>
 </html>
 
@@ -94,14 +111,12 @@ if ($action=="deletelogday" && isUserRoot()) {
 	});		
 
 
-
 	//delete day images
 	function deleteDay() {
-		if (confirm("Please confirm, thas you want to delete all images from the selected day?") ) {
+		if (confirm("Please confirm, thas you want to delete all logs from the selected day?") ) {
 		    window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
 		}
 	}
-
 
 	//loads over ajax the list of logs for the selected date
 	function loadLogList() {
@@ -124,9 +139,10 @@ if ($action=="deletelogday" && isUserRoot()) {
 			    if (i%2==0) row.className="trx"; else row.className="try";
 			    
 			    var cell1=row.insertCell(j++); cell1.innerHTML=data[i].date;
-			    var cell2=row.insertCell(j++); cell2.innerHTML='<a href="http://freegeoip.net/json/'+data[i].ip+'" target="_new">'+data[i].ip+'</a>';
+			    var cell2=row.insertCell(j++); cell2.innerHTML='<a href="javascript:showip(\''+data[i].ip+'\')">'+data[i].ip+'</a>';
 			    var cell3=row.insertCell(j++); cell3.innerHTML=data[i].text; 
 			}
+			$("#count").html(data.length);
 		}
 	}
 	
@@ -134,18 +150,15 @@ if ($action=="deletelogday" && isUserRoot()) {
 	    window.location.href="<?php echo ( 'viewAjax.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
 	}
 	
-	function dayBefore() {
-	    window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType.'&day='.date_format($daydec, 'Y-n-j'))?>";
+	function showip(ip) {
+	    $.ajax({
+		  url: "http://ip-api.com/json/"+ip
+		}).success(function(data) {
+		    $(".modal-title").html("IP address:"+ip+" geo data");
+			$(".modal-body").html("Country:"+data.country+"<br/>Zipcode:"+data.zip+"<br/>City:"+data.city);
+			$('#myModal').modal({show: 'false' });
+		});
 	}
-
-	function dayAfter() {
-	    window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType.'&day='.date_format($dayinc, 'Y-n-j'))?>";
-	}
-
-	function dayToday() {
-	    window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType)?>";
-	}
-
 
 	function getTime(s) {
 		k=s.split("-");
@@ -240,14 +253,14 @@ function getBookedDays($year=0,$month=0){
 
 	$ret = array();
 	
-	$f = fopen ("log", "r");
+	$f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
 	$ln= 0;
 	while ($line= fgets ($f)) {
 		++$ln;
 		$rr=explode("\t", $line,4);
 		$time=substr($rr[0],0,7);
 		$akttime=$referenceDay->format('Y-m');
-		if($akttime==$time && $rr[2]==loggerLevel::info) {
+		if($akttime==$time && $rr[1]==loggerLevel::info) {
 			$time=substr($rr[0],0,10);
 			for ($i=1;$i<10;$i++) {
 				if ($time==$akttime.'-0'.$i )
