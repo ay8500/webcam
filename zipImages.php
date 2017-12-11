@@ -57,8 +57,8 @@ function zipImages($camName,$delete=true) {
 	$deleted=0;
 	if ($delete) {
 		foreach ($deletefiles as $d) {
-			$deleted++;
-			unlink($path.$d);
+			if (unlink($path.$d))
+				$deleted++;
 		}
 	}
 	//make a nice return object

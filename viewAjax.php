@@ -219,7 +219,7 @@ if ($action=="deleteday" && isUserRoot()) {
 			aktualImageIdx=animateEnd--;
 			showImage();
 			if (animateBegin<=animateEnd) 
-				animateTimer = setTimeout(animateImage, 100);
+				animateTimer = setTimeout(animateImage, 500);
 		}
 	}
 	

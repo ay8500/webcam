@@ -21,6 +21,8 @@ class BiFi {
 			fclose($this->fpIndex);
 			return true;
 		} else {
+			$this->fpData=false;
+			unset($this->index);$this->index=array();
 			return true;
 		}
 	}
@@ -28,7 +30,9 @@ class BiFi {
 	public function close() {
 		if($this->fpData!==false ) {
 			fclose($this->fpData);
+			$this->fpData=false;
 		}
+		unset($this->index);$this->index=array();
 	}
 	
 	public function addFile($fileName,$name) {
