@@ -112,7 +112,7 @@ button:hover {
 
 .calendarDiv {text-align: center; background-color: lightgray;}
 .calendarBody {display: inline-block; margin:5px;padding:3px;min-height:100px; border-radius: 10px; background-color: #eeeeee}
-.calendarCell {min-width: 25px;min-height: 10px; text-align: center; margin:3px};
+.calendarCell {min-width: 25px;min-height: 10px; text-align: center; margin:3px;}
 .calendarDays {background-color: bisque;}
 .calendarDay {background-color: lightgreen;}
 .calendarDayNo1 {background-color: #ffe030;}

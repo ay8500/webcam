@@ -4,10 +4,12 @@ include_once 'zipImages.php';
 include_once 'logger.class.php';
 
 setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
-foreach (Constants::IMAGE_PATH() as $camName=>$path) {
-	$ret=zipImages($camName);
-	$text=$camName.' Zipped:'.$ret->filesZipped.' Deleted:'.$ret->deleted." Days:".$ret->daysZipped;
-	logger($text,loggerLevel::debug);
-	echo($text."<br/>\n");
-	
+
+foreach (Constants::getCameras() as $camName=>$propertys) {
+    if($propertys["zip"]) {
+        $ret = zipImages($camName);
+        $text = $camName . '=>  to be Zipped:' . $ret->tobeZipped . ' Zipped:' . $ret->filesZipped . ' Deleted:' . $ret->deleted . " Days:" . $ret->daysZipped;
+        logger($text, loggerLevel::debug);
+        echo($text . "<br/>\n");
+    }
 }

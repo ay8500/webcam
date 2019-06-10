@@ -2,23 +2,45 @@
 class Constants
 {
 	const TITLE="Webcam by Levi";
-	
-	//The value for foscam should be "CameraName"=>"/directory/CameraType_xxxxxxxxxxxx/snap/"
-	public static function IMAGE_PATH() {
-		return array(	 "Kamera1"=>"FI9900P_00626E66039D/snap/"
-						,"Kamera2"=>"FI9900P_C4D655408C9F/snap/"
-						,"Thalmannsfeld"=>"FI9805W_00626E646465/snap/"
-					);
-	}
-	
-	const ZIPFILES=true;
-	const MAX_COUNT_TO_ZIP=10;
-	
-	
-	const IMAGE_ROOT_PATH="/var/www/usb/";
+
+    const CAMERAS='{
+		"Kamera1":{
+			"path":"cam/FI9900P_00626E66039D/snap/",
+			"zip":true,
+			"webcam":false
+		},
+		"Kamera2":{
+			"path":"cam/FI9900P_C4D655408C9F/snap/",
+			"zip":true,
+			"webcam":false
+		},
+		"Thalmannsfeld":{
+			"path":"cam/FI9805W_00626E646465/snap/",
+			"zip":true,
+			"webcam":true
+		},
+		"testflat":{
+			"path":"test/jpg/",
+			"zip":false,
+			"webcam":true
+		},
+		"test":{
+			"path":"test/pictures/",
+			"zip":true,
+			"webcam":true
+		}
+	}';
+
+    public static function getCameras() {
+        return json_decode(self::CAMERAS,true);
+    }
+
+    const MAX_COUNT_TO_ZIP=10;
+
+	const IMAGE_ROOT_PATH="c:\\xampp\\htdocs\\webcam\\";
 	
 	public static function IMAGE_URL() {
-		return "http://".$_SERVER["SERVER_NAME"]."/usb/";
+		return "http://".$_SERVER["SERVER_NAME"]."/webcam";
 	}
 	
 	//Display calendar minimal and maximal months refered to now. Example -3,2 will display 6 months

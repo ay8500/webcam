@@ -36,8 +36,7 @@ if ($password!=Constants::PASSW_ROOT) {
 	die ("Wrong Password");
 }
 
-$ip=Constants::IMAGE_PATH();
-$path=Constants::IMAGE_ROOT_PATH.$ip[$camname];
+$path=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"];
 
 $zip = new BiFi();
 $fzip=$path."cam".date_format($day, 'Ymd').".zip";

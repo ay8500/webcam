@@ -36,13 +36,13 @@ $filter=$type;
 $idx=0;
 
 if ($days>0) {
-	foreach (Constants::IMAGE_PATH() as $camName=>$imgPath) {
-		$path =Constants::IMAGE_ROOT_PATH.$imgPath;
+	foreach (Constants::getCameras() as $camName=>$propertys) {
+		$path =Constants::IMAGE_ROOT_PATH.$propertys["path"];
 		$directory = dir($path);	
 		while ($file = $directory->read()) {
 			if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
 			  strstr($file,$filter) &&
-				($day->format("U") - filectime(Constants::IMAGE_ROOT_PATH.$imgPath.$file)) > 86400*$days	) {
+				($day->format("U") - filectime($path.$file)) > 86400*$days	) {
 				$images_array[$idx] = $path.$file;	
 				$idx++;
 				if ($action=="delete")

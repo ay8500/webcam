@@ -25,7 +25,7 @@ else
 
 $filter=".";
 
-$imgPath=Constants::IMAGE_PATH()[$camname];
+$imgPath=Constants::getCameras()[$camname]["path"];
 
 	$path =Constants::IMAGE_ROOT_PATH.$imgPath;
 	$directory = dir($path);
