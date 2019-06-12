@@ -11,15 +11,35 @@ if (isset($_GET["action"])) $action = $_GET["action"]; else $action="";
 
 $scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
 $script=$scriptArray[sizeof($scriptArray)-1];
+$dateEarlier = clone ($day); $dateEarlier->modify("-1 month");
+$dateLater = clone ($day); $dateLater->modify("1 month");
 
 $systemMessage="";
 include_once 'logger.class.php';
 setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 
-if ($action=="deletelogday" && isUserRoot()) {
-    //TODO
-    $count=0;
+if ($action=="deleteday" && isUserRoot()) {
+    $count=0;$countAll=0;
+    $f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
+    $w = fopen (Constants::IMAGE_ROOT_PATH.'new.log', "w");
+    while ($line= fgets ($f)) {
+        $rr=explode("\t", $line,5);
+        $time=substr($rr[0],0,10);
+        $akttime=$day->format('Y-m-d');
+        if($akttime==$time && $rr[1]==loggerLevel::info) {
+            $count++;
+        } else {
+            fputs($w,$line);
+            $countAll++;
+        }
+    }
+    fclose($f);
+    fclose($w);
+    if (unlink(Constants::IMAGE_ROOT_PATH.'log'))
+        rename(Constants::IMAGE_ROOT_PATH.'new.log',Constants::IMAGE_ROOT_PATH.'log');
+
+    $systemMessage="Entrys deleted:".$count. " Lines remained:".$countAll;
     logger("deleteLog Date:".$day->format("Ymd")." Count:".$count,loggerLevel::debug);
 }
 
@@ -38,7 +58,7 @@ if ($action=="deletelogday" && isUserRoot()) {
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
-<body>
+<body style="font-family: Arial;">
 <?php if ($systemMessage!="") :?>
     <div>
         <?php echo ($systemMessage);?>
@@ -46,25 +66,30 @@ if ($action=="deletelogday" && isUserRoot()) {
 <?php endif;?>
 <div id="title"><?php echo Constants::TITLE?> logs</div>
 <div class="calendarDiv">
+    <form style="display: inline-block;"><button name="day" value="<?php echo $dateEarlier->format('Y-m-d')?>"><< aerlier</button></form>
     <?php
     require_once("calendar.class.php");
     $cal = new calendar();
-    for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
+    $calendarDate = clone ($day);
+    $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
+    for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {
+        ?>
         <div class="calendarBody">
-            <?php $cal->showCalendar(0,$i,$camType,$camName,getBookedDays(0,$i),array(),$day); ?>
+            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
         </div>
-    <?php } ?>
+    <?php $calendarDate->modify("1 month"); } ?>
+    <form style="display: inline-block;"><button name="day" value="<?php echo $dateLater->format('Y-m-d')?>">later >></button></form>
 </div>
 <div class="toolbar" id="tollbartop">
     <?php if (isUserRoot()):?>
-        <button name="action" value="deleteday" onclick="deleteDay();" title="Attention: all pictures for the actual day will be deleted!">Delete logs for this day</button>
+        <button name="action" value="deleteday" onclick="deleteDay();" title="Attention: all logs for the actual day will be deleted!">Delete logs for this day</button>
     <?php endif;?>
     <span id="count" title="Log entrys">0</span>
 </div>
 <div id="clearboth"></div>
 <div class="toolbar" >
     <table id="logs">
-        <tr><td>Date</td></tr>
+        <tr><td>No log entrys for this day.</td></tr>
     </table>
 </div>
 <div class="footer" id="tollbarfooter">
@@ -248,7 +273,7 @@ function getBookedDays($year=0,$month=0){
         else
             $referenceDay->modify($month.' month');
     } else {
-        $referenceDay    = mktime(0,0,0,$month,1,$year);
+        $referenceDay    = (new DateTime)->setTimestamp(mktime(0,0,0,$month,1,$year));
     }
 
     $ret = array();

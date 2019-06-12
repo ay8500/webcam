@@ -1,5 +1,7 @@
 @CHARSET "ISO-8859-1";
 
+body {font-family: Arial;}
+
 img
 {
   width: auto ;
@@ -111,7 +113,7 @@ button:hover {
 /*Calendar*/
 
 .calendarDiv {text-align: center; background-color: lightgray;}
-.calendarBody {display: inline-block; margin:5px;padding:3px;min-height:100px; border-radius: 10px; background-color: #eeeeee}
+.calendarBody {display: inline-block; margin:5px;padding:3px;min-height:100px; border-radius: 10px; background-color: #eeeeee; vertical-align: top}
 .calendarCell {min-width: 25px;min-height: 10px; text-align: center; margin:3px;}
 .calendarDays {background-color: bisque;}
 .calendarDay {background-color: lightgreen;}

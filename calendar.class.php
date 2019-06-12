@@ -17,8 +17,7 @@ class calendar{
 			$month=$referenceDay->format('n');
 			$year=$referenceDay->format('Y');
 		} else {
-				$referenceDay    = mktime(0,0,0,$month,1,$year);
-				
+				$referenceDay    = (new DateTime)->setTimestamp(mktime(0,0,0,$month,1,$year));
 		}
 		
 	    $firstDay = new DateTime($referenceDay->format('n').'/01/'.$referenceDay->format('Y'));
