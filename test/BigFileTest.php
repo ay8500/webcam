@@ -118,11 +118,13 @@ class BigFileTest extends \PHPUnit_Framework_TestCase
             $this->assertTrue($this->delteTestFile(self::TEST_PATH,$l));
         }
 
-        //Check entrys and test file
+        //Check entrys content
         $zip->open($fzip);
         $this->assertSame(13,$zip->numFiles);
         for($nr=1;$nr<=13;$nr++) {
+            $idx=$zip->statIndex($nr-1);
             $name = "file_".$nr;
+            $this->assertSame($name,key($idx));
             $this->assertSame($this->createTestTxt($nr),$zip->getFromName( $name));
         }
         $zip->close();
@@ -151,6 +153,18 @@ class BigFileTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(0,$ret['freeSize']);
         print_r($ret);
 
+        //Check entrys content
+        $zip->open($fzip);
+        for($i=0;$i<$zip->numFiles;$i++) {
+            $idx=$zip->statIndex($i);
+            $name = key($idx);
+            $nr = intval(explode("_",$name)[1]);
+            $text = $this->createTestTxt($nr);
+            $content = $zip->getFromName( $name);
+            $this->assertSame($text,$content);
+        }
+        $zip->close();
+
         //Delete test file
         $this->assertTrue($zip->deleteAchive());
         $zip->close();
@@ -174,7 +188,13 @@ class BigFileTest extends \PHPUnit_Framework_TestCase
     }
 
     private function createTestTxt($nr) {
-        return "content_file_nr_".$nr."\r\n"."Line_2_file_nr_".$nr;
+        $ret = "content_file_nr_".$nr."\r\n"."Line_2_file_nr_".$nr;
+
+        for ($i=0;$i<intval(abs(sin($nr*6.1091827432))*10000);$i++) {
+            $ret .=chr(32+intval(abs(sin($i*$nr*5.0123)*100)) % 64);
+        }
+
+        return $ret;
     }
 
     private function delteTestFile($path, $nr) {

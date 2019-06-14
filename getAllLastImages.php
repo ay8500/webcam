@@ -16,12 +16,13 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
     $directory = dir($path);
     $latest_ctime = 1;
     $latest_filename = '';
+    $akttime="";
     if (isUserOk() && $directory!==false) {
         if ($propertys["zip"]) {
 
             while ($file = $directory->read()) {
-                $akttime=intval(filemtime($path.$file));
-                if (strtolower(substr($file, -4))===".bfi" &&  $akttime>= $latest_ctime) {
+                $akttime=intval(substr($file, 3,8));
+                if (strtolower(substr($file, -4))===".bfi" &&  $akttime> $latest_ctime) {
                     $latest_ctime = $akttime;
                     $latest_filename = $file;
                 }
@@ -30,12 +31,13 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
             //newest zip file found
             if ($latest_filename!="") {
                 $zip = new BiFi();
-                $fzip=$path.substr($latest_filename,0,strlen($latest_filename)-4);
+                $zipFileName=substr($latest_filename,0,strlen($latest_filename)-4);
+                $fzip=$path.$zipFileName;
                 $zip->open($fzip);
                 $item=$zip->statIndex($zip->numFiles-1);
                 $zip->close();
                 $ret=array();
-                $ret["date"]=substr($latest_filename,3,strlen($latest_filename)-11);
+                $ret["date"]=$latest_ctime;
                 $ret["name"]=key($item);
                 $images_array[$camName] =$ret;
             }
@@ -49,6 +51,7 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
             }
             if ($latest_filename!="") {
                 $date = (new DateTime)->setTimestamp($latest_ctime);
+                unset($ret["zip"]);
                 $ret["date"] = $date->format("Ymd");
                 $ret["name"] =$propertys["path"].$latest_filename;
                 $images_array[$camName] = $ret;

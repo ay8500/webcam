@@ -456,7 +456,6 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function imageOlder() {
         if (aktualImageIdx<imageList.length-1) {
-            $("#image").css("opacity","0.2");
             aktualImageIdx++;
             showImage();
         }
@@ -464,14 +463,12 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function imageNewer() {
         if (aktualImageIdx>0) {
-            $("#image").css("opacity","0.2");
             aktualImageIdx--;
             showImage();
         }
     }
 
     function imageLast() {
-        $("#image").css("opacity","0.2");
         aktualImageIdx=0;
         showImage();
     }

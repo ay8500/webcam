@@ -151,7 +151,8 @@ class BiFi {
         if($fpData===false )
             return null;
 
-        fseek($fpData, (int)$item["p"]);
+        if(-1==fseek($fpData, (int)$item["p"]))
+            return null;
         $ret = fread($fpData,(int)$item["l"]);
         fclose($fpData);
         return $ret;
@@ -297,14 +298,19 @@ class BiFi {
 
         for ($i=0; $i<$this->numFiles; $i++) {
             $idx= $this->statIndex($i);
+            $oldPosition = $idx[key($idx)]["p"];
+            $idx[key($idx)]["p"]=$calculatedSize;   //the new position of content in the data file
             $calculatedSize += $idx[key($idx)]["l"];
             $count++;
-            if(!$onlyCheck) {
-                $separator = ($i==0?"":",");
-                $json=trim(json_encode($idx),"{}")."}";
-                fwrite($fpti,$separator.$json);
-                fseek($fpd,$idx[key($idx)]["p"]);
-                fwrite($fptd,fread($fpd,$idx[key($idx)]["l"]));
+            if (!$onlyCheck) {
+                $separator = ($i == 0 ? "" : ",");
+                $json = trim(json_encode($idx), "{}") . "}";
+                if (!fwrite($fpti, $separator . $json))
+                    return false;
+                if (-1==fseek($fpd, $oldPosition) )
+                    return false;
+                if (!fwrite($fptd, fread($fpd, $idx[key($idx)]["l"])))
+                    return false;
             }
         }
         if (!$onlyCheck) {
