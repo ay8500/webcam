@@ -354,12 +354,12 @@ if ($action=="deleteday" && isUserRoot()) {
         });
     }
 
-    //calls an ajax function to delete old pictures
+    //calls ajax function to delete old pictures
     function deleteFiles() {
         $.ajax({
             url: "getImageListOlderThen.php?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
             success:function(data){
-                if (confirm(data.files+"files deleted, do you want to refresch the site?")) {
+                if (confirm(data.files+" files deleted, do you want to refresch the site?")) {
                     location.reload();
                 }
             }
