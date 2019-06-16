@@ -1,7 +1,10 @@
 <?php
 include 'config.php';
+include 'logger.class.php';
 
 header('Content-Type: application/json');
+setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+
 
 if (isset($_GET['filename']))
 	$filename=$_GET['filename'];
@@ -27,6 +30,7 @@ $filename=str_replace(Constants::IMAGE_URL(), Constants::IMAGE_ROOT_PATH, $filen
 if (unlink($filename)) {
 	header("HTTP/1.0 200 OK");
 	echo(json_encode("Ok"));
+    logger("Delete file:".$filename,loggerLevel::info);
 } else {
 	echo("File:".$filename." not deleted!");
 	header("HTTP/1.0 400 Bad Request");

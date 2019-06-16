@@ -50,6 +50,10 @@ button:hover {
 	background-color: lightgray;
 }
 
+#image {
+	display: inline;
+}
+
 .footer {
 	background-color: lightgray; 
 	padding: 5px; 

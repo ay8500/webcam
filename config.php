@@ -7,12 +7,14 @@ class Constants
 		"Kamera1":{
 			"path":"cam/FI9900P_00626E66039D/snap/",
 			"zip":true,
-			"webcam":false
+			"webcam":false,
+			"snap":"Schedule_","alert":"MDAlarm_"
 		},
 		"Kamera2":{
 			"path":"cam/FI9900P_C4D655408C9F/snap/",
 			"zip":true,
-			"webcam":false
+			"webcam":false,
+			"snap":"Schedule_","alert":"MDAlarm_"
 		},
 		"Thalmannsfeld":{
 			"path":"cam/FI9805W_00626E646465/snap/",
@@ -47,15 +49,7 @@ class Constants
 	const CALENDAR_MIN_DISPLAY=-1;
 	const CALENDAR_MAX_DISPLAY=0;
 	
-	
-	//Empty string for SNAP will not show snapshot pictures
-	//For Foscam the value sould be: "Schedule_" 
-	const SNAP="Schedule_";
-	
-	//Empty string for ALERT will not show alert pictures
-	//For Foscam the value sould be: "MDAlarm_"
-	const ALERT="MDAlarm_";
-	
+
 	const PASSW_VIEW="levi67";
 	const PASSW_ROOT="camlevi67";
 	

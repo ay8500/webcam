@@ -8,52 +8,54 @@ if (isset($_GET['action']))
 else
 	$action="";
 
-/*
-if (isset($_GET['days']) && intval($_GET['days'])>0)
-	$days=intval($_GET['days']);
-else
-	die("You have to specify the days paramter als an integer bigger than 0");
-
-
-if (isset($_GET['type']))
-	$type=$_GET['type'];
-else
-	$type=".";
-
 if (isset($_GET['day']) && $_GET['day']!="" )
 	$day=new DateTime($_GET['day']);
 else
-	$day=new DateTime();
-*/
-$days=Constants::AUTO_DELETE_OLDER_THAN_DAYS;
-$type=Constants::AUTO_DELETE_FILTER;
-$day=new DateTime();
+	die("day parameter is missing");
 
-$images_array= array();
+if (isset($_GET['cam']) && $_GET['cam']!="" )
+	$camName=$_GET['cam'];
+else
+	die("cam parameter is missing");
 
-$filter=$type;
+if (isset(Constants::getCameras()[$camName]))
+	$propertys = Constants::getCameras()[$camName];
+else
+	die("camera propertys not set");
 
-$idx=0;
-
-if ($days>0) {
-	foreach (Constants::getCameras() as $camName=>$propertys) {
-		$path =Constants::IMAGE_ROOT_PATH.$propertys["path"];
-		$directory = dir($path);	
-		while ($file = $directory->read()) {
-			if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
-			  strstr($file,$filter) &&
-				($day->format("U") - filectime($path.$file)) > 86400*$days	) {
-				$images_array[$idx] = $path.$file;	
-				$idx++;
-				if ($action=="delete")
-					unlink($path.$file);
+$count=0;
+$path =Constants::IMAGE_ROOT_PATH.$propertys["path"];
+$directory = dir($path);
+while ($file = $directory->read()) {
+	if($propertys["zip"]) {
+		if (in_array(strtolower(substr($file, -4)), array(".bfd", ".bfi")) &&
+			(new DateTime(substr($file,3,8)))->format("U")<intval($day->setTime(0,0)->format("U"))
+			)
+		{
+			if ($action == "delete") {
+				if (unlink($path . $file))
+					$count++;
+			} else {
+				$count++;
 			}
 		}
-		$directory->close();
-	}	
-		
-	rsort($images_array);
+	} else {
+		if (in_array(strtolower(substr($file, -4)), array(".jpg", ".gif", ".png"))&&
+			filemtime($path . $file)<intval($day->format("U"))
+		)
+		{
+			if ($action == "delete") {
+				if (unlink($path . $file))
+					$count++;
+			} else {
+				$count++;
+			}
+		}
+	}
 }
-echo(json_encode($images_array));
+$directory->close();
+$ret = array();
+$ret["files"]=$count;
+echo(json_encode($ret));
 ?>
 

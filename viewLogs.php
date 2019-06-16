@@ -3,8 +3,6 @@ include 'config.php';
 
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
 
-if (isset($_GET["type"])) $camType = $_GET["type"]; else $camType=Constants::SNAP;
-
 if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); else $day=new DateTime();
 
 if (isset($_GET["action"])) $action = $_GET["action"]; else $action="";
@@ -75,7 +73,7 @@ if ($action=="deleteday" && isUserRoot()) {
     for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {
         ?>
         <div class="calendarBody">
-            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
+            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),"",$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
         </div>
     <?php $calendarDate->modify("1 month"); } ?>
     <form style="display: inline-block;"><button name="day" value="<?php echo $dateLater->format('Y-m-d')?>">later >></button></form>
@@ -139,7 +137,7 @@ if ($action=="deleteday" && isUserRoot()) {
     //delete day images
     function deleteDay() {
         if (confirm("Please confirm, thas you want to delete all logs from the selected day?") ) {
-            window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+            window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type=&day='.date_format($day, 'Y-n-j'))?>";
         }
     }
 
@@ -172,7 +170,7 @@ if ($action=="deleteday" && isUserRoot()) {
     }
 
     function showImages() {
-        window.location.href="<?php echo ( 'viewAjax.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+        window.location.href="<?php echo ( 'viewAjax.php?cam='.$camName.'&type=&day='.date_format($day, 'Y-n-j'))?>";
     }
 
     function showip(ip) {

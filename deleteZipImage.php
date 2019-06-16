@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 include_once 'bifi.class.php';
+include 'logger.class.php';
 
 header('Content-Type: application/json');
 
@@ -35,6 +36,7 @@ if ($password!=Constants::PASSW_ROOT) {
 	header("HTTP/1.0 400 Bad Request");
 	die ("Wrong Password");
 }
+setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 $path=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"];
 
@@ -42,8 +44,9 @@ $zip = new BiFi();
 $fzip=$path."cam".date_format($day, 'Ymd').".zip";
 if ($zip->open($fzip)) {
 	if ($zip->deleteName($filename)) {
-		echo(json_encode("Ok"));			
-	} else {
+		echo(json_encode("Ok"));
+        logger("Remove file from archive:".$filename." Cam:".$camname,loggerLevel::info);
+    } else {
 		header("HTTP/1.0 400 Bad Request");
 		echo(json_encode("Error: file:".$filename." not found!"));
 	}
