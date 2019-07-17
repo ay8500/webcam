@@ -185,7 +185,8 @@ if ($action=="deleteday" && isUserRoot()) {
     <?php if (isUserRoot()):?>
         <div id="actionslider"></div>
         <span title="Range" id="range">0</span>
-        <button onclick="animateRange(); "><span class="glyphicon glyphicon-film"></span> Animate range</button>
+        <button id="animate" onclick="animateRange(); "><span class="glyphicon glyphicon-film"></span> Animate range</button>
+        <button id="video" onclick="showVideo(); "><span class="glyphicon glyphicon-film"></span> Time laps</button>
         <button onclick="deleteRange();"><span class="glyphicon glyphicon-remove-circle"></span> Delete range</button>
         <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> Show logs</button>
         <?php if (isset(Constants::getCameras()[$camName]) && Constants::getCameras()[$camName]["zip"]) {?>
@@ -241,8 +242,11 @@ if ($action=="deleteday" && isUserRoot()) {
         <?php endif;?>
     });
 
+    var imageArray = Array();
+    var videoIdx=0;
 
     function animateRange() {
+        imageArray = [];
         if ($( "#actionslider" ).slider("values").length==2) {
             animateBegin=$( "#actionslider" ).slider("values")[0];
             animateEnd=$( "#actionslider" ).slider("values")[1];
@@ -255,11 +259,24 @@ if ($action=="deleteday" && isUserRoot()) {
             clearTimeout(animateTimer);
         if (animateBegin>=0 && animateEnd>=0 && animateBegin<=animateEnd) {
             aktualImageIdx=animateEnd--;
-            showImage();
+            var img=new Image();
+            img.src=showImage();
+            imageArray.push(img);
+            $("#video").text("Time laps:"+imageArray.length);
             if (animateBegin<=animateEnd)
                 animateTimer = setTimeout(animateImage, 100);
         }
     }
+
+    function showVideo() {
+        if (videoIdx<imageArray.length) {
+            $("#image").attr("src",imageArray[videoIdx++].src);
+            setTimeout(showVideo, 50);
+        } else {
+            videoIdx=0;
+        }
+    }
+
 
     function deleteRange() {
         if ($( "#actionslider" ).slider("values").length==2) {
@@ -273,17 +290,20 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function showImage() {
         $("#akt_image").html(getTime(imageList[aktualImageIdx]));
+        var src;
         if (imageList.length>aktualImageIdx) {
             <?php if (Constants::getCameras()[$camName]["zip"]) { ?>
-            $("#image").attr("src","getZipCamImage.php?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx]);
+                src="getZipCamImage.php?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx];
             <?php } else {?>
-            $("#image").attr("src",imageList[aktualImageIdx]);
+                src = imageList[aktualImageIdx]);
             <?php } ?>
+            $("#image").attr("src",src);
         } else {
-            $("#image").attr("src","");
+            $("#image").attr("src",src);
         }
         $("#count").html((aktualImageIdx+1)+"/"+imageList.length);
         $( "#slider" ).slider( "option", "value", aktualImageIdx );
+        return src;
     }
 
     function deleteImage() {

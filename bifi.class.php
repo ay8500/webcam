@@ -9,7 +9,7 @@ class BiFi {
     const BIFI_DATA_EXTENSION = '.bfd';
     const BIFI_INDEX_EXTENSION = '.bfi';
 
-    const BIFI_MAX_INDEX_LENGTH_IN_MEMORY=30000;
+    const BIFI_MAX_INDEX_LENGTH_IN_MEMORY=100000;
 
     public $numFiles=0;
     private $fileName="";
