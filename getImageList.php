@@ -37,30 +37,16 @@ if(!isUserOk()) {
         die();
     }
     $path=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"];
+        $images_array= array();
+        $idx=0;
     if (Constants::getCameras()[$camname]["zip"]) {
-        $firstEntry=true;
-        echo('[');
         $zip = new BiFi();
         $fzip=$path."cam".date_format($day, 'Ymd').".zip";
         if ($zip->open($fzip)) {
-            for ($i=0; $i<$zip->numFiles;$i++) {
-                $name=key($zip->statIndex($i));
-                if($name!="") {
-                    if ($filter=="" || strstr($name,$filter))  {
-                        if($firstEntry) {
-                            $firstEntry=false;
-                        } else {
-                            echo(",");
-                        }
-                        echo('"'.$name.'"');
-                    }
-                }
-            }
+			$images_array = $zip->getArchiveFileCount($filter,true);
         }
-        echo(']');
+	    sort($images_array);
     } else {
-        $images_array= array();
-        $idx=0;
         $directory = dir($path);
         while ($file = $directory->read()) {
             if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
@@ -72,9 +58,10 @@ if(!isUserOk()) {
 
         }
         $directory->close();
-        rsort($images_array);
-        echo(json_encode($images_array));
+	    rsort($images_array);
+
     }
+    echo(json_encode($images_array));
 }
 
 function isUserOk() {

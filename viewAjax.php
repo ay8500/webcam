@@ -270,8 +270,11 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function showVideo() {
         if (videoIdx<imageArray.length) {
+            $("#akt_image").html(getTime(imageList[videoIdx]));
+            $("#count").html((animateBegin+imageArray.length-videoIdx)+"/"+imageList.length);
+            $("#slider").slider( "option", "value", animateBegin+imageArray.length-videoIdx-1 );
             $("#image").attr("src",imageArray[videoIdx++].src);
-            setTimeout(showVideo, 50);
+            setTimeout(showVideo, 75);
         } else {
             videoIdx=0;
         }
@@ -289,20 +292,20 @@ if ($action=="deleteday" && isUserRoot()) {
     <?php if ($camName!="all") {?>
 
     function showImage() {
-        $("#akt_image").html(getTime(imageList[aktualImageIdx]));
         var src;
         if (imageList.length>aktualImageIdx) {
+            $("#akt_image").html(getTime(imageList[aktualImageIdx]));
+            $("#count").html((aktualImageIdx+1)+"/"+imageList.length);
+            $("#slider").slider( "option", "value", aktualImageIdx );
             <?php if (Constants::getCameras()[$camName]["zip"]) { ?>
                 src="getZipCamImage.php?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx];
             <?php } else {?>
-                src = imageList[aktualImageIdx]);
+                src = imageList[aktualImageIdx];
             <?php } ?>
             $("#image").attr("src",src);
         } else {
             $("#image").attr("src",src);
         }
-        $("#count").html((aktualImageIdx+1)+"/"+imageList.length);
-        $( "#slider" ).slider( "option", "value", aktualImageIdx );
         return src;
     }
 

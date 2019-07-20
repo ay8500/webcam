@@ -9,9 +9,10 @@ class BiFi {
     const BIFI_DATA_EXTENSION = '.bfd';
     const BIFI_INDEX_EXTENSION = '.bfi';
 
-    const BIFI_MAX_INDEX_LENGTH_IN_MEMORY=100000;
+    const BIFI_MAX_INDEX_LENGTH_IN_MEMORY=68000;
 
     public $numFiles=0;
+	public $deletedFiles=0;
     private $fileName="";
 
     /**
@@ -182,13 +183,18 @@ class BiFi {
      * @param string $fileName
      * @return number
      */
-    public function getArchiveFileCount ($filter="") {
+    public function getArchiveFileCount ($filter="",$returnArray=false) {
         if (!file_exists($this->fileName.self::BIFI_INDEX_EXTENSION))
             return 0;
 
         $fp=fopen($this->fileName.self::BIFI_INDEX_EXTENSION,"r");
         if ($fp===false)
             return 0;
+
+		if($returnArray) {
+			$archArray=Array();
+			$idx=0;
+		}
 
         $count=0;
         $fileContent='';
@@ -200,15 +206,25 @@ class BiFi {
             foreach ($fcArray as $i=>$item) {
                 if ($i<$l) {
                     if (strstr($item,"*")===false               //elements that contains * are "deleted"
-                        && (""==$filter || strstr($item,$filter)))   //filter
-                        $count++;
+                        && (""==$filter || strstr($item,$filter))) {  //filter
+						$count++;
+						if ($returnArray) {
+							$json="{".ltrim($item,",{")."}}";
+							$itemArray=json_decode($json,true);
+							$archArray[$idx++] = key($itemArray);
+						}
+					}
                 } else  {
                     $fileContent=$item;
                 }
             }
         }
         fclose($fp);
-        return $count;
+		if($returnArray) {
+			return $archArray;
+		} else {
+			return $count;
+		}
     }
 
     /**
