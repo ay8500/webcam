@@ -24,6 +24,12 @@ if (isset($_GET['day']) && $_GET['day']!="" )
 else
     $day=new DateTime();
 
+if (isset($_GET['deleted']) && $_GET['deleted']!="" )
+    $deleted=true;
+else
+    $deleted=false;
+
+
 if(!isUserOk()) {
     $images_array= array();
     $images_array[0] = "./password.jpg";
@@ -45,7 +51,8 @@ if(!isUserOk()) {
         if ($zip->open($fzip)) {
 			$images_array = $zip->getArchiveFileCount($filter,true);
         }
-	    sort($images_array);
+        if ($zip->numFiles>0)
+	        sort($images_array);
     } else {
         $directory = dir($path);
         while ($file = $directory->read()) {
@@ -61,7 +68,10 @@ if(!isUserOk()) {
 	    rsort($images_array);
 
     }
-    echo(json_encode($images_array));
+    if($deleted)
+        echo(json_encode($zip->numDeletedFiles));
+    else
+        echo(json_encode($images_array));
 }
 
 function isUserOk() {

@@ -82,12 +82,17 @@ if ($action=="deleteday" && isUserRoot()) {
     <title>Webcam Viewer by Levi</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" ></script>
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="webcam.css">
+
+    <script src="mjbuilder.js"></script>
+    <script src="blobbuilder.js"></script>
 
 </head>
 <body>
@@ -174,6 +179,7 @@ if ($action=="deleteday" && isUserRoot()) {
     </div>
     &nbsp;&nbsp;&nbsp;&nbsp;
     <span id="count" title="The aktual picture and the number of pictures">0</span>
+    <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="Deleted pictures in the archive"></span>
         Date:<span id="akt_date">...</span> File:<span id="akt_image">...</span>
 </div>
 <div id="clearboth"></div>
@@ -185,8 +191,9 @@ if ($action=="deleteday" && isUserRoot()) {
     <?php if (isUserRoot()):?>
         <div id="actionslider"></div>
         <span title="Range" id="range">0</span>
-        <button id="animate" onclick="animateRange(); "><span class="glyphicon glyphicon-film"></span> Animate range</button>
-        <button id="video" onclick="showVideo(); "><span class="glyphicon glyphicon-film"></span> Time laps</button>
+        <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create</button>
+        <button id="video" onclick="showVideo(false); "><span class="glyphicon glyphicon-film"></span> Time laps</button>
+        <button id="video" onclick="showVideo(true); "><span class="glyphicon glyphicon-film"></span> Download</button>
         <button onclick="deleteRange();"><span class="glyphicon glyphicon-remove-circle"></span> Delete range</button>
         <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> Show logs</button>
         <?php if (isset(Constants::getCameras()[$camName]) && Constants::getCameras()[$camName]["zip"]) {?>
@@ -207,6 +214,7 @@ if ($action=="deleteday" && isUserRoot()) {
     <button onclick="$('#password').attr('type', 'text');">Show</button>
     <button onclick="$('#password_div').slideUp('slow');">Cancel</button>
 </div>
+<canvas id="canvas" width="1024" height="800" style="display: none"></canvas>
 </body>
 </html>
 
@@ -217,9 +225,6 @@ if ($action=="deleteday" && isUserRoot()) {
     var imageList = new Array;
     var deleteBegin=-1;
     var deleteEnd=-1;
-    var animateBegin=-1;
-    var animateEnd=-1;
-    var animateTimer;
 
     $( document ).ready(function() {
         showCamImages();
@@ -242,43 +247,78 @@ if ($action=="deleteday" && isUserRoot()) {
         <?php endif;?>
     });
 
+    var animateBegin = -2;
+    var animateEnd = -2;
+    var animateTimer = null;
     var imageArray = Array();
-    var videoIdx=0;
+    var videoIdx = 0;
 
-    function animateRange() {
-        imageArray = [];
-        if ($( "#actionslider" ).slider("values").length==2) {
-            animateBegin=$( "#actionslider" ).slider("values")[0];
-            animateEnd=$( "#actionslider" ).slider("values")[1];
-            animateImage();
-        }
-    }
 
-    function animateImage() {
+    function createVideo() {
         if (animateTimer!=null)
             clearTimeout(animateTimer);
-        if (animateBegin>=0 && animateEnd>=0 && animateBegin<=animateEnd) {
-            aktualImageIdx=animateEnd--;
-            var img=new Image();
-            img.src=showImage();
-            imageArray.push(img);
-            $("#video").text("Time laps:"+imageArray.length);
-            if (animateBegin<=animateEnd)
-                animateTimer = setTimeout(animateImage, 100);
+        if( animateEnd==-2) {
+            if ($( "#actionslider" ).slider("values").length==2) {
+                imageArray = [];videoIdx=0;
+                animateBegin=$( "#actionslider" ).slider("values")[0];
+                animateEnd=$( "#actionslider" ).slider("values")[1];
+                createVideo();
+            }
+        } else {
+            if (animateBegin >= 0 && animateEnd >= 0 && animateBegin <= animateEnd) {
+                aktualImageIdx = animateEnd--;
+                var img = new Image();
+                img.src = showImage();
+                imageArray.push(img);
+                $("#video").text("Time laps:" + imageArray.length);
+                animateTimer = setTimeout(createVideo, 10);
+            } else {
+                animateEnd=-2;
+            }
         }
     }
 
-    function showVideo() {
+    var builder;
+    var saveVideo=false;
+
+    function showVideo(save) {
+        if (save!==undefined)
+            saveVideo=save;
+        if (videoIdx==0 && saveVideo) {
+            builder = new movbuilder.MotionJPEGBuilder();
+            $("#canvas").width($("#image").width());$("#canvas").height($("#image").height());
+            builder.setup(  $("#canvas").width(),$("#canvas").height(),10 /* FPS */ );
+        }
         if (videoIdx<imageArray.length) {
             $("#akt_image").html(getTime(imageList[videoIdx]));
-            $("#count").html((animateBegin+imageArray.length-videoIdx)+"/"+imageList.length);
-            $("#slider").slider( "option", "value", animateBegin+imageArray.length-videoIdx-1 );
-            $("#image").attr("src",imageArray[videoIdx++].src);
-            setTimeout(showVideo, 75);
+            $("#count").html((animateBegin + imageArray.length - videoIdx) + "/" + imageList.length);
+            $("#slider").slider("option", "value", animateBegin + imageArray.length - videoIdx - 1);
+            $("#image").attr("src", imageArray[videoIdx].src);
+            if (saveVideo) {
+                var ctx = document.getElementById('canvas');
+                if (canvas.getContext) {
+                    var ctx = canvas.getContext('2d');
+                    var img1 = new Image();
+                    img1.src = imageArray[videoIdx].src;
+                    //drawing the image
+                    img1.onload = function () {
+                        ctx.drawImage(img1, 0, 0);
+                    };
+                }
+                builder.addCanvasFrame(document.getElementById("canvas"));
+            }
+            videoIdx++;
+            setTimeout(showVideo, 100);
         } else {
             videoIdx=0;
+            if(saveVideo) {
+                builder.finish(function (generatedURL) {
+                    window.open(generatedURL);
+                });
+            }
         }
     }
+
 
 
     function deleteRange() {
@@ -427,6 +467,16 @@ if ($action=="deleteday" && isUserRoot()) {
                     $( "#actionslider" ).slider("option", "values", [0,imageList.length-1]);
                     $( "#range" ).html( "1 - " + (imageList.length) );
                     <?php endif;?>
+                }
+            }
+        })
+        $.ajax({
+            url: "getImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname+"&deleted=ask",
+            success:function(data){
+                if (data>0) {
+                    $("#countDeleted").show().html(data);
+                } else {
+                    $("#countDeleted").hide();
                 }
             }
         })

@@ -12,7 +12,7 @@ class BiFi {
     const BIFI_MAX_INDEX_LENGTH_IN_MEMORY=68000;
 
     public $numFiles=0;
-	public $deletedFiles=0;
+	public $numDeletedFiles=0;
     private $fileName="";
 
     /**
@@ -192,7 +192,7 @@ class BiFi {
             return 0;
 
 		if($returnArray) {
-			$archArray=Array();
+			$archArray=array();
 			$idx=0;
 		}
 
@@ -205,15 +205,18 @@ class BiFi {
             $l=sizeof($fcArray)-1;
             foreach ($fcArray as $i=>$item) {
                 if ($i<$l) {
-                    if (strstr($item,"*")===false               //elements that contains * are "deleted"
-                        && (""==$filter || strstr($item,$filter))) {  //filter
-						$count++;
-						if ($returnArray) {
-							$json="{".ltrim($item,",{")."}}";
-							$itemArray=json_decode($json,true);
-							$archArray[$idx++] = key($itemArray);
-						}
-					}
+                    if (strstr($item,"*")===false) {               //elements that contains * are "deleted"
+                        if (""==$filter || strstr($item,$filter)) {  //filter
+                            $count++;
+                            if ($returnArray) {
+                                $json = "{" . ltrim($item, ",{") . "}}";
+                                $itemArray = json_decode($json, true);
+                                $archArray[$idx++] = key($itemArray);
+                            }
+                        }
+					} else {
+                        $this->numDeletedFiles++;
+                    }
                 } else  {
                     $fileContent=$item;
                 }
