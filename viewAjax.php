@@ -3,6 +3,7 @@ include 'config.php';
 include_once 'zipImages.php';
 include_once 'logger.class.php';
 include_once 'bifi.class.php';
+include_once 'deleteImages.php';
 setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
@@ -34,7 +35,7 @@ logger("View:".$day->format("Y.m.d")."\tType:".$camType."\tCam:".$camName."\tUse
 
 //Zip the files in one zipfile per day
 if ($action=="zipImages" && isUserRoot()) {
-    $zip=zipImages($camName);
+    $zip=zipImages($camName,true,false);
     $systemMessage="Files zipped date:".$day->format("Ymd")." files:".$zip->filesZipped." deleted:".$zip->deleted." days:".$zip->daysZipped;
     logger($systemMessage,loggerLevel::info);
 }
@@ -54,25 +55,7 @@ if ($action=="reorganizeImages" && isUserRoot()) {
 }
 
 if ($action=="deleteday" && isUserRoot()) {
-    $path=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camName]["path"];
-    if (Constants::getCameras()[$camName]["zip"]) {
-        $fileName=$path."cam".$day->format('Ymd').".zip";
-        unlink($fileName.".bfi");
-        unlink($fileName.".bfd");
-        $fileDeletedCount=2;
-    } else {
-        $directory = dir($path);$fileDeletedCount=0;
-        while ($file = $directory->read()) {
-            if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
-                ($camType=="" || strstr($file,$camType)) && (new DateTime())->setTimestamp(filemtime($path.$file))->format("Ymd")===$day->format("Ymd")  	) {
-                unlink($path.$file);
-                $fileDeletedCount++;
-            }
-        }
-        $directory->close();
-    }
-    $systemMessage="Files deleted:".$fileDeletedCount;
-    logger("Delete day date:".$day->format("Ymd")." files:".$fileDeletedCount,loggerLevel::info);
+    $systemMessage = deleteImagesFromDay($camType,$camName,$day);
 }
 
 
@@ -91,13 +74,10 @@ if ($action=="deleteday" && isUserRoot()) {
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="webcam.css">
 
-    <script src="mjbuilder.js"></script>
-    <script src="blobbuilder.js"></script>
-
 </head>
 <body>
 <?php if ($systemMessage!="") :?>
-    <div>
+    <div style="padding:5px;background-color: #00bfbf">
         <?php echo ($systemMessage);?>
     </div>
 <?php endif;?>
@@ -188,11 +168,11 @@ if ($action=="deleteday" && isUserRoot()) {
 </div>
 <div class="footer" id="tollbarfooter">
     <div id="slider"></div>
+    <div id="actionslider"></div>
+    <span title="Range" id="range">0</span>
+    <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create Video</button>
+    <button id="video" onclick="showVideo(false); "><span class="glyphicon glyphicon-film"></span> No Video</button>
     <?php if (isUserRoot()):?>
-        <div id="actionslider"></div>
-        <span title="Range" id="range">0</span>
-        <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create</button>
-        <button id="video" onclick="showVideo(false); "><span class="glyphicon glyphicon-film"></span> Time laps</button>
         <button id="video" onclick="showVideo(true); "><span class="glyphicon glyphicon-film"></span> Download</button>
         <button onclick="deleteRange();"><span class="glyphicon glyphicon-remove-circle"></span> Delete range</button>
         <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> Show logs</button>
@@ -234,7 +214,6 @@ if ($action=="deleteday" && isUserRoot()) {
                 showImage();
             }
         });
-        <?php if (isUserRoot()):?>
         $( "#actionslider" ).slider({
             range: true,
             min: 0,	max: 0, values: [ 0, 0 ],
@@ -244,7 +223,6 @@ if ($action=="deleteday" && isUserRoot()) {
                 $( "#range" ).html( (ui.values[ 0 ]+1) + " - " + (ui.values[ 1 ]+1) );
             }
         });
-        <?php endif;?>
     });
 
     var animateBegin = -2;
@@ -270,8 +248,8 @@ if ($action=="deleteday" && isUserRoot()) {
                 var img = new Image();
                 img.src = showImage();
                 imageArray.push(img);
-                $("#video").text("Time laps:" + imageArray.length);
-                animateTimer = setTimeout(createVideo, 10);
+                $("#video").text("Show Video:" + imageArray.length);
+                animateTimer = setTimeout(createVideo, 15);
             } else {
                 animateEnd=-2;
             }
@@ -401,7 +379,6 @@ if ($action=="deleteday" && isUserRoot()) {
             window.location.href="<?php echo ( $script.'?action=reorganizeImages&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
         }
     }
-    <?php }?>
 
     //check if old images should be deleted
     function deleteOldImages() {
@@ -428,6 +405,12 @@ if ($action=="deleteday" && isUserRoot()) {
             }
         });
     }
+
+    function showLogs() {
+        window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+    }
+
+    <?php }?>
 
 
     //Show images called by changing the camera or image type
@@ -462,11 +445,9 @@ if ($action=="deleteday" && isUserRoot()) {
                 if (imageList.length>0) {
                     showImage();
                     $( "#slider" ).slider("option", "max", imageList.length-1);
-                    <?php if (isUserRoot()):?>
                     $( "#actionslider" ).slider("option", "max", imageList.length-1);
                     $( "#actionslider" ).slider("option", "values", [0,imageList.length-1]);
                     $( "#range" ).html( "1 - " + (imageList.length) );
-                    <?php endif;?>
                 }
             }
         })
@@ -526,9 +507,6 @@ if ($action=="deleteday" && isUserRoot()) {
         }
     }
 
-    function showLogs() {
-        window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
-    }
 
     function dayBefore() {
         window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType.'&day='.date_format($daydec, 'Y-n-j'))?>";
@@ -658,7 +636,7 @@ function getBookedDays($camName,$path,$type,$year=0,$month=0){
 }
 
 /**
- * Count Images fpr one day
+ * Count Images for one day
  * @param unknown $day
  * @param unknown $path
  * @param unknown $type

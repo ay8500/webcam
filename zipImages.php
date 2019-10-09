@@ -6,20 +6,17 @@ include_once 'bifi.class.php';
 
 /**
  * Zip images in a zip file per day
- * Only 100 images will be zipped at once! call the funtion sever times to zip all images
- * The count of max image are define in config.php
- * @param unknown $camName
+ * Only a defined number of images will be zipped at once! Call the funtion severel times to zip all images.
+ * The count of max image are define in config.php Constants::MAX_COUNT_TO_ZIP
+ * @param string $camName
  */
-
-function zipImages($camName,$delete=true) {
+function zipImages($camName,$delete=true,$simulate=true) {
     $fileZipped=0;$daysZipped=0;$tobeZipped=0;$deleted=0;$camPath=null;
-    //Get the path of the camera
-    foreach (Constants::getCameras() as $cn=>$propertys) {
-        if ($cn==$camName && $propertys["zip"]) {
-            $camPath=$propertys["path"];
-        }
-    }
-    if ($camPath!==null) {
+
+    $propertys=Constants::getCameras()[$camName];
+    $camPath=$propertys["path"];
+
+    if ($camPath!==null && $propertys["zip"]) {
         //Server path
         $path = Constants::IMAGE_ROOT_PATH . $camPath;
         $directory = dir($path);
@@ -38,6 +35,7 @@ function zipImages($camName,$delete=true) {
 
             ksort($files);
             $deletefiles = array();
+            $alertMail = array();
             //zip the files
             $tobeZipped = count($files);
 
@@ -45,16 +43,26 @@ function zipImages($camName,$delete=true) {
                 $zip = new BiFi();
                 $zipfilename = "";
                 foreach ($files as $f => $d) {
-                    if ($zipfilename != date('Ymd', $d)) {
-                        $zipfilename = date('Ymd', $d);
-                        $zip->close();
-                        $zipfilenamepath = $path . "cam" . $zipfilename . ".zip";
-                        if ($zip->open($path . "cam" . $zipfilename . ".zip", ZipArchive::CREATE)) {
-                            $daysZipped++;
+                    if (!$simulate) {
+                        if ($zipfilename != date('Ymd', $d)) {
+                            $zipfilename = date('Ymd', $d);
+                            $zip->close();
+                            $zipfilenamepath = $path . "cam" . $zipfilename . ".zip";
+                            if ($zip->open($path . "cam" . $zipfilename . ".zip", ZipArchive::CREATE)) {
+                                $daysZipped++;
+                            }
                         }
+                        $resultOfZip=$zip->addFile($path . $f, $f);
+                    } else {
+                        $resultOfZip=true;
                     }
-                    if ($zip->addFile($path . $f, $f)) {
+
+                    if ($resultOfZip) {
                         $fileZipped++;
+                        //check if an alert file
+                        if(isset($propertys["alert"]) && isset($propertys["alertEmail"]) && strpos($f,$propertys["alert"])!==false) {
+                            array_push($alertMail,$f);
+                        }
                         array_push($deletefiles, $f);
                     }
                 }
@@ -64,8 +72,12 @@ function zipImages($camName,$delete=true) {
             //delete them
             if ($delete) {
                 foreach ($deletefiles as $d) {
-                    if (unlink($path . $d))
+                    if (!$simulate) {
+                        if (unlink($path . $d))
+                            $deleted++;
+                    } else {
                         $deleted++;
+                    }
                 }
             }
 
@@ -76,6 +88,7 @@ function zipImages($camName,$delete=true) {
         $ret->filesZipped=$fileZipped;
         $ret->daysZipped=$daysZipped;
         $ret->deleted=$deleted;
+        $ret->sendMail=$alertMail;
     } else {
         //make a nice return object for camera not found
         $ret = new stdClass();
@@ -83,6 +96,7 @@ function zipImages($camName,$delete=true) {
         $ret->filesZipped = 0;
         $ret->daysZipped = 0;
         $ret->deleted = 0;
+        $ret->sendMail=array();
     }
     return $ret;
 }

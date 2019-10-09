@@ -2,13 +2,16 @@
 class Constants
 {
 	const TITLE="Webcam by Levi";
+    const EMAIL_SENDER="code@blue-l.de";
+    const EMAIL_ALERT_SUBJECT="Webcam alert";
 
     const CAMERAS='{
 		"Kamera1":{
 			"path":"cam/FI9900P_00626E66039D/snap/",
 			"zip":true,
 			"webcam":false,
-			"snap":"Schedule_","alert":"MDAlarm_"
+			"snap":"Schedule_","alert":"MDAlarm_",
+			"alertEmail":"code@blue-l.de"
 		},
 		"Kamera2":{
 			"path":"cam/FI9900P_C4D655408C9F/snap/",
@@ -19,7 +22,9 @@ class Constants
 		"Thalmannsfeld":{
 			"path":"cam/FI9805W_00626E646465/snap/",
 			"zip":true,
-			"webcam":true
+			"webcam":true,
+			"snap":"Schedule_","alert":"MDAlarm_",
+			"alertEmail":"code@blue-l.de"
 		},
 		"testflat":{
 			"path":"test/jpg/",
@@ -29,7 +34,8 @@ class Constants
 		"test":{
 			"path":"test/pictures/",
 			"zip":true,
-			"webcam":true
+			"webcam":true,
+			"alertEmail":"code@blue-l.de"
 		}
 	}';
 
@@ -54,9 +60,9 @@ class Constants
 	const PASSW_ROOT="camlevi67";
 	
 	//Delete pictures that are older than 
-	const AUTO_DELETE_OLDER_THAN_DAYS=0;
+	const BATCH_DELETE_OLDER_THAN_DAYS=30;
 	
-	//Unse . (point) to delete all files, or MDAlarm_ to delete alarm files, or Schedule_ for scheduled filese  
+	//Unse . (point) to delete all files, or MDAlarm_ to delete alarm files, or Schedule_ for scheduled files
 	const AUTO_DELETE_FILTER=".";
 }
 
