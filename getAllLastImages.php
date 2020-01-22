@@ -17,7 +17,7 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
     $latest_ctime = 1;
     $latest_filename = '';
     $akttime="";
-    if (isUserOk() && $directory!==false) {
+    if ((isUserRoot() || isUserView() || $propertys["webcam"] ) && $directory!==false) {
         if ($propertys["zip"]) {
 
             while ($file = $directory->read()) {
@@ -68,8 +68,4 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
 
 echo(json_encode($images_array));
 
-
-function isUserOk() {
-    return isset($_COOKIE["password"]) && ( $_COOKIE["password"]==Constants::PASSW_ROOT || $_COOKIE["password"]==Constants::PASSW_VIEW );
-}
 ?>

@@ -121,7 +121,7 @@ class calendar{
 				} else {
 					$class .='calendarDayNo3"';
 				}
-				echo '<td '.$class.'><a title="Images:'.$booktDays[$actday].'" href="'.$script.'?cam='.$cam.'&type='.$type.'&day='.$year.'-'.$month.'-'.$actday.'">'.$actday.'</a></td>';
+				echo '<td '.$class.'><a title="Entries:'.$booktDays[$actday].'" href="'.$script.'?cam='.$cam.'&type='.$type.'&day='.$year.'-'.$month.'-'.$actday.'">'.$actday.'</a></td>';
 			} else {
 				$class .='calendarCell calendarDay"';
 				echo '<td '.$class.'>'.$actday.'</td>';

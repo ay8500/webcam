@@ -1,7 +1,7 @@
 <?php
 
-include_once __DIR__ . "/../lpfw/logger.class.php";
-include_once __DIR__ . "/../config.php";
+include_once __DIR__ . "/../../webcam/config.php";
+include_once __DIR__ . "/../../lpfw/logger.class.php";
 
 class AjaxTest extends \PHPUnit_Framework_TestCase
 {
@@ -24,7 +24,7 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1,$ret);
         $this->assertSame("./password.jpg",$ret[0] );
 
-        $ret=$this->callAjaxUrl($url."getImageList.php?camname=test&day=2019-6-3&password=".md5(Constants::PASSW_ROOT),true);
+        $ret=$this->callAjaxUrl($url."getImageList.php?camname=test&day=2019-6-3&password=".md5(\Constants::PASSW_ROOT),true);
         $this->assertNotNull($ret);
         $this->assertCount(15,$ret);
         $this->assertSame("Schedule_20190603-033000.jpg",$ret[0] );
@@ -56,6 +56,6 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
             return null;
         $url=$_SERVER["HTTP_REFERER"];
         $url = substr($url,0,strlen($url)-strlen("phpunit/"));
-        return $url;
+        return $url."/webcam/";
     }
 }

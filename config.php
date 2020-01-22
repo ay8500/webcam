@@ -60,10 +60,18 @@ class Constants
 	const PASSW_ROOT="camlevi67";
 	
 	//Delete pictures that are older than 
-	const BATCH_DELETE_OLDER_THAN_DAYS=30;
+	const BATCH_DELETE_OLDER_THAN_DAYS=30000;
 	
 	//Unse . (point) to delete all files, or MDAlarm_ to delete alarm files, or Schedule_ for scheduled files
 	const AUTO_DELETE_FILTER=".";
+}
+
+function isUserRoot() {
+    return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_ROOT;
+}
+
+function isUserView() {
+    return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_VIEW;
 }
 
 ?>

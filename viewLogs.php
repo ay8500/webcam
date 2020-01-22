@@ -1,5 +1,6 @@
 <?PHP
 include 'config.php';
+include 'config.class.php';
 
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
 
@@ -13,8 +14,8 @@ $dateEarlier = clone ($day); $dateEarlier->modify("-1 month");
 $dateLater = clone ($day); $dateLater->modify("1 month");
 
 $systemMessage="";
-include_once 'logger.class.php';
-setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+include_once Config::$lpfw.'logger.class.php';
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 
 if ($action=="deleteday" && isUserRoot()) {
@@ -25,7 +26,7 @@ if ($action=="deleteday" && isUserRoot()) {
         $rr=explode("\t", $line,5);
         $time=substr($rr[0],0,10);
         $akttime=$day->format('Y-m-d');
-        if($akttime==$time && $rr[1]==loggerLevel::info) {
+        if($akttime==$time && $rr[1]==maierlabs\lpfw\LoggerLevel::info) {
             $count++;
         } else {
             fputs($w,$line);
@@ -37,10 +38,22 @@ if ($action=="deleteday" && isUserRoot()) {
     if (unlink(Constants::IMAGE_ROOT_PATH.'log'))
         rename(Constants::IMAGE_ROOT_PATH.'new.log',Constants::IMAGE_ROOT_PATH.'log');
 
-    $systemMessage="Entrys deleted:".$count. " Lines remained:".$countAll;
-    logger("deleteLog Date:".$day->format("Ymd")." Count:".$count,loggerLevel::debug);
+    $systemMessage="Entries deleted:".$count. " Lines remained:".$countAll;
+    maierlabs\lpfw\Logger::_("deleteLog Date:".$day->format("Ymd")." Count:".$count,maierlabs\lpfw\LoggerLevel::debug);
+} else {
+    $countInfo = 0;
+    $countDebug = 0;
+    $countError = 0;
+    $f = fopen(Constants::IMAGE_ROOT_PATH . 'log', "r");
+    while ($line = fgets($f)) {
+        $rr = explode("\t", $line, 5);
+        if ($rr[1] == maierlabs\lpfw\LoggerLevel::info) $countInfo++;
+        elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::debug) $countDebug++;
+        elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::error) $countError++;
+    }
+    fclose($f);
+    $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$countError;
 }
-
 
 ?>
 <html>
@@ -57,14 +70,15 @@ if ($action=="deleteday" && isUserRoot()) {
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body style="font-family: Arial;">
-<?php if ($systemMessage!="") :?>
-    <div>
-        <?php echo ($systemMessage);?>
-    </div>
-<?php endif;?>
 <div id="title"><?php echo Constants::TITLE?> logs</div>
+<?php if ($systemMessage!="") :?>
+    <div id="systemMessage" style="background-color: lightgray;padding-bottom: 10px"><div style="background-color: #ffe030;padding: 5px;margin: 0px 10px 0px 10px;border-radius: 5px;">
+        <?php echo ($systemMessage);?>
+            <button style="height:23px;float: right" onclick="$('#systemMessage').hide('show');"><span class="glyphicon glyphicon-remove-circle" style="position: relative;top: -4px;"></span></button>
+    </div></div>
+<?php endif;?>
 <div class="calendarDiv">
-    <form style="display: inline-block;"><button name="day" value="<?php echo $dateEarlier->format('Y-m-d')?>"><< aerlier</button></form>
+    <form style="display: inline-block;"><button name="day" value="<?php echo $dateEarlier->format('Y-m-d')?>"><span class="glyphicon glyphicon-backward"> </span></button></form>
     <?php
     require_once("calendar.class.php");
     $cal = new calendar();
@@ -76,7 +90,7 @@ if ($action=="deleteday" && isUserRoot()) {
             <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),"",$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
         </div>
     <?php $calendarDate->modify("1 month"); } ?>
-    <form style="display: inline-block;"><button name="day" value="<?php echo $dateLater->format('Y-m-d')?>">later >></button></form>
+    <form style="display: inline-block;"><button name="day" value="<?php echo $dateLater->format('Y-m-d')?>"><span class="glyphicon glyphicon-forward"> </span></button></form>
 </div>
 <div class="toolbar" id="tollbartop">
     <?php if (isUserRoot()):?>
@@ -131,6 +145,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     $( document ).ready(function() {
         loadLogList();
+        setTimeout(function(){ $("#systemMessage").hide("slow"); }, 10000);
     });
 
 
@@ -283,7 +298,7 @@ function getBookedDays($year=0,$month=0){
         $rr=explode("\t", $line,4);
         $time=substr($rr[0],0,7);
         $akttime=$referenceDay->format('Y-m');
-        if($akttime==$time && $rr[1]==loggerLevel::info) {
+        if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info) {
             $time=substr($rr[0],0,10);
             for ($i=1;$i<10;$i++) {
                 if ($time==$akttime.'-0'.$i )
@@ -300,18 +315,4 @@ function getBookedDays($year=0,$month=0){
 
     return $ret;
 }
-
-
-/*
- * Check if the user is root
- */
-function isUserRoot() {
-    return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_ROOT;
-}
-
-function isUserView() {
-    return isset($_COOKIE["password"]) && $_COOKIE["password"]==Constants::PASSW_VIEW;
-}
-
-
 ?>

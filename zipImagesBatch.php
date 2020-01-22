@@ -3,7 +3,7 @@
 //the main function is zipImages from the php file  zipImages.php
 include_once 'config.php';
 include_once 'zipImages.php';
-include_once 'logger.class.php';
+include_once __DIR__.'/../lpfw/logger.class.php';
 
 setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
 

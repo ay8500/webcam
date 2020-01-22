@@ -1,6 +1,6 @@
 <?php
 include 'config.php';
-include 'logger.class.php';
+include __DIR__.'/../lpfw/logger.class.php';
 
 header('Content-Type: application/json');
 setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');

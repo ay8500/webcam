@@ -1,12 +1,11 @@
 <?php
-include 'config.php';
-include 'logger.class.php';
+include_once 'config.php';
+include_once 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
 
 header('Content-Type: application/json');
 
-
 if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); else $day=new DateTime();
-
 
 $log= array();
 
@@ -19,7 +18,7 @@ if(isUserOk()) {
 		$rr=explode("\t", $line,5);
 		$time=substr($rr[0],0,10);
 		$akttime=$day->format('Y-m-d');
-		if($akttime==$time && $rr[1]==loggerLevel::info) {
+		if($akttime==$time && $rr[1]==maierlabs\lpfw\LoggerLevel::info) {
 			$r["date"]=$rr[0];
 			$r["ip"]=$rr[2];
 			$r["text"]=$rr[4];

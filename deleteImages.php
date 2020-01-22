@@ -1,6 +1,6 @@
 <?php
 include_once 'config.php';
-include_once 'logger.class.php';
+include_once __DIR__.'/../lpfw/logger.class.php';
 
 /**
  * Delete images from one day

@@ -1,6 +1,7 @@
 <?php
 
-include_once __DIR__ . "/../lpfw/logger.class.php";
+include_once __DIR__ . "/../config.class.php";
+include_once Config::$lpfw."/logger.class.php";
 include_once __DIR__ . "/../config.php";
 include_once __DIR__ . "/../bifi.class.php";
 
