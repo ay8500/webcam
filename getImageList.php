@@ -30,7 +30,7 @@ else
     $deleted=false;
 
 
-if(!isUserOk()) {
+if(!isUserOk() && !Constants::getCameras()[$camname]["webcam"]) {
     $images_array= array();
     $images_array[0] = "./password.jpg";
     echo(json_encode($images_array));

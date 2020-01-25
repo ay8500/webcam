@@ -36,7 +36,7 @@ if ($password!=Constants::PASSW_ROOT) {
 	header("HTTP/1.0 400 Bad Request");
 	die ("Wrong Password");
 }
-setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 $path=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"];
 
@@ -45,7 +45,7 @@ $fzip=$path."cam".date_format($day, 'Ymd').".zip";
 if ($zip->open($fzip)) {
 	if ($zip->deleteName($filename)) {
 		echo(json_encode("Ok"));
-        logger("Remove file from archive:".$filename." Cam:".$camname,loggerLevel::info);
+        \maierlabs\lpfw\Logger::_("Remove file from archive:".$filename." Cam:".$camname,loggerLevel::info);
     } else {
 		header("HTTP/1.0 400 Bad Request");
 		echo(json_encode("Error: file:".$filename." not found!"));

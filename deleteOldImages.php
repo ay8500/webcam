@@ -1,6 +1,7 @@
 <?php
 include_once 'config.php';
-include_once __DIR__.'/../lpfw/logger.class.php';
+include_once 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
 
 header('Content-Type: application/json');
 
@@ -8,7 +9,7 @@ if (isset($_GET['action']))
     $action=$_GET['action'];
 else
     $action="";
-setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'delete.log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'delete.log');
 $day=new DateTime();
 $day->modify('-'.Constants::BATCH_DELETE_OLDER_THAN_DAYS.' day');
 
@@ -53,7 +54,7 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
     $ret[$camName]=$count;
 }
 echo($text=json_encode($ret));
-logger($text, loggerLevel::debug);
+\maierlabs\lpfw\Logger::_($text, loggerLevel::debug);
 
 
 

@@ -109,7 +109,6 @@ if ($action=="deleteday" && isUserRoot()) {
         <button onclick="showImages()">Show Images</button>
     <?php endif;?>
     <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))">Enter password</button>
-    <div id="message"></div>
 </div>
 <div id="password_div" style="display:none" >
     <input id="password"  type="password" placeholder="password" value=""/>

@@ -1,9 +1,10 @@
 <?php
 include 'config.php';
-include __DIR__.'/../lpfw/logger.class.php';
+include_once 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
 
 header('Content-Type: application/json');
-setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 
 if (isset($_GET['filename']))
@@ -30,13 +31,11 @@ $filename=str_replace(Constants::IMAGE_URL(), Constants::IMAGE_ROOT_PATH, $filen
 if (unlink($filename)) {
 	header("HTTP/1.0 200 OK");
 	echo(json_encode("Ok"));
-    logger("Delete file:".$filename,loggerLevel::info);
+    \maierlabs\lpfw\Logger::_("Delete file:".$filename,loggerLevel::info);
 } else {
 	echo("File:".$filename." not deleted!");
 	header("HTTP/1.0 400 Bad Request");
 	echo(json_encode("Error"));
 }
 	
-
-
 ?>

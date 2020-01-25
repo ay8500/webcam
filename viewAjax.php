@@ -1,7 +1,7 @@
 <?PHP
 include 'config.php';
-include_once 'zipImages.php';
 include_once __DIR__.'/../lpfw/logger.class.php';
+include_once 'zipImages.php';
 include_once 'bifi.class.php';
 include_once 'deleteImages.php';
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
@@ -60,11 +60,10 @@ if ($action=="deleteday" && isUserRoot()) {
     $systemMessage = deleteImagesFromDay($camType,$camName,$day);
 }
 
-
 ?>
 <html>
 <head>
-    <title>Webcam Viewer by Levi</title>
+    <title>Webcam app by MaierLabs</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -86,7 +85,7 @@ if ($action=="deleteday" && isUserRoot()) {
             <select id="camname" name="cam" onchange="submit()">
                 <option value="all" >all</option>
                 <?php foreach (Constants::getCameras() as $camn=>$camPropertys) {
-                    if ($camPropertys["webcam"] || isUserView() || isUserRoot()) {
+                    if ($camPropertys["webcam"] || isUserView() || isUserRoot() || $camPropertys["webcam"]) {
                         if ($camn == $camName) {
                             $camPath = $camPropertys["path"];
                             echo('<option selected value="' . $camn . '">' . $camn . '</option>');
@@ -150,36 +149,38 @@ if ($action=="deleteday" && isUserRoot()) {
             <button name="day" value="<?php echo $monthinc->format('Y-m-d')?>"> <span class="glyphicon glyphicon-forward"> </span></button>
         </form>
     </div>
+    <div class="toolbar">
+        <div style="display: inline-block;">
+            <button name="action" value="daybefore" onclick="dayBefore();"><span class="glyphicon glyphicon-backward"></span> Day</button>
+            <button name="action" value="dayafter" onclick="dayAfter();">Day <span class="glyphicon glyphicon-forward"></span></button>
+            <button name="action" value="today" onclick="dayToday();">Today</button>
+        </div>
+        <div style="display: inline-block;">
+            <button name="action" value="next" onclick="imageOlder();"> <span class="glyphicon glyphicon-arrow-left"> </span> </button>
+            <button name="action" value="prev" onclick="imageNewer();"> <span class="glyphicon glyphicon-arrow-right"> </span> </button>
+            <button name="action" value="last" onclick="imageLast();"> <span class="glyphicon glyphicon-fast-forward"> </span> </button>
+        </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span id="count" title="The actual picture and the number of pictures">0</span>
+        <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="Deleted pictures in the archive"></span>
+            Date:<span id="akt_date">...</span> File:<span id="akt_image">...</span>
+    </div>
+    <div id="clearboth"></div>
 <?php } ?>
-<div class="toolbar" id="tollbartop">
-    <div style="display: inline-block;">
-        <button name="action" value="daybefore" onclick="dayBefore();"><span class="glyphicon glyphicon-backward"></span> Day</button>
-        <button name="action" value="dayafter" onclick="dayAfter();">Day <span class="glyphicon glyphicon-forward"></span></button>
-        <button name="action" value="today" onclick="dayToday();">Today</button>
-    </div>
-    <div style="display: inline-block;">
-        <button name="action" value="next" onclick="imageOlder();"> <span class="glyphicon glyphicon-arrow-left"> </span> </button>
-        <button name="action" value="prev" onclick="imageNewer();"> <span class="glyphicon glyphicon-arrow-right"> </span> </button>
-        <button name="action" value="last" onclick="imageLast();"> <span class="glyphicon glyphicon-fast-forward"> </span> </button>
-    </div>
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    <span id="count" title="The aktual picture and the number of pictures">0</span>
-    <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="Deleted pictures in the archive"></span>
-        Date:<span id="akt_date">...</span> File:<span id="akt_image">...</span>
-</div>
-<div id="clearboth"></div>
 <div id="camimage">
     <img id="image" src=""  title="" />
 </div>
-<div class="footer" id="tollbarfooter">
+<div class="footer">
+    <?php if ($camName!="all") {?>
     <div id="slider"></div>
-    <?php if(isUserView() || isUserRoot() ) {?>
-        <div id="actionslider"></div>
+    <?php if (isUserRoot()) {?><div id="actionslider"></div><?php }?>
+    <?php if(isUserView() || isUserRoot() || ($camName!="all" && Constants::getCameras()[$camName]["path"])) {?>
         <span title="Range" id="range">0</span>
-        <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create Video</button>
-        <button id="video" onclick="showVideo(false); "><span class="glyphicon glyphicon-film"></span> No Video</button>
+        <?php if (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"]) {?>
+            <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create Video</button>
+            <button id="video" onclick="showVideo(); "><span class="glyphicon glyphicon-film"></span> Show Video</button>
+        <?php }?>
         <?php if (isUserRoot()):?>
-            <button id="video" onclick="showVideo(true); "><span class="glyphicon glyphicon-film"></span> Download</button>
             <button onclick="deleteRange();"><span class="glyphicon glyphicon-remove-circle"></span> Delete range</button>
             <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> Show logs</button>
             <?php if (isset(Constants::getCameras()[$camName]) && Constants::getCameras()[$camName]["zip"]) {?>
@@ -191,9 +192,9 @@ if ($action=="deleteday" && isUserRoot()) {
             <button name="action" value="deleteolder" onclick="deleteOldImages();" class="btn-danger" title="Attention: all older pictures as the actual showed day will be deleted!"><span class="glyphicon glyphicon-remove-circle"></span> Delete older</button>
         <?php endif;?>
     <?php }?>
-    <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> Login</button>
     <button onclick="showCamImages()"><span class="glyphicon glyphicon-refresh"></span> Refresh pictures</button>
-    <div id="message"></div>
+    <?php }?>
+    <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> Login</button>
 </div>
 <div id="password_div" style="display:none" >
     <input id="password"  type="password" placeholder="password" value=""/>
@@ -214,6 +215,7 @@ if ($action=="deleteday" && isUserRoot()) {
     var deleteEnd=-1;
 
     $( document ).ready(function() {
+        $("#video").hide();
         showCamImages();
         $( "#slider" ).slider({
             slide: function( event, ui ) {
@@ -221,18 +223,25 @@ if ($action=="deleteday" && isUserRoot()) {
                 showImage();
             }
         });
-        $( "#actionslider" ).slider({
-            range: true,
-            min: 0,	max: 0, values: [ 0, 0 ],
-            slide: function( event, ui ) {
-                aktualImageIdx = ui.value;
-                showImage();
-                $( "#range" ).html( (ui.values[ 0 ]+1) + " - " + (ui.values[ 1 ]+1) );
-            }
-        });
+        <?php if (isUserView() || isUserRoot()) {?>
+            $( "#actionslider" ).slider({
+                range: true,
+                min: 0,	max: 0, values: [ 0, 0 ],
+                slide: function( event, ui ) {
+                    aktualImageIdx = ui.value;
+                    showImage();
+                    $( "#range" ).html( (ui.values[ 0 ]+1) + " - " + (ui.values[ 1 ]+1) );
+                }
+            });
+        <?php }?>
+        <?php if ($camName=="all") {?>
+            setInterval(function(){showAllLastImages(); }, 15000);
+        <?php }?>
         setTimeout(function(){ $("#systemMessage").hide("slow"); }, 10000);
+
     });
 
+<?php if ($camName!="all" && (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"])  ) {?>
     var animateBegin = -2;
     var animateEnd = -2;
     var animateTimer = null;
@@ -244,78 +253,40 @@ if ($action=="deleteday" && isUserRoot()) {
         if (animateTimer!=null)
             clearTimeout(animateTimer);
         if( animateEnd==-2) {
-            if ($( "#actionslider" ).slider("values").length==2) {
-                imageArray = [];videoIdx=0;
-                animateBegin=$( "#actionslider" ).slider("values")[0];
-                animateEnd=$( "#actionslider" ).slider("values")[1];
-                createVideo();
-            }
+            imageArray = [];videoIdx=0;
+            animateBegin=$( "#slider" ).slider("value");
+            animateEnd=$( "#slider" ).slider("option","max");
+            if (animateEnd-animateBegin>250)
+                animateEnd = animateBegin+250;
+            createVideo();
         } else {
             if (animateBegin >= 0 && animateEnd >= 0 && animateBegin <= animateEnd) {
                 aktualImageIdx = animateEnd--;
                 var img = new Image();
                 img.src = showImage();
                 imageArray.push(img);
-                $("#video").text("Show Video:" + imageArray.length);
-                animateTimer = setTimeout(createVideo, 15);
+                $("#video").show();
+                animateTimer = setTimeout(createVideo, 1);
             } else {
                 animateEnd=-2;
             }
         }
     }
 
-    var builder;
-    var saveVideo=false;
-
-    function showVideo(save) {
-        if (save!==undefined)
-            saveVideo=save;
-        if (videoIdx==0 && saveVideo) {
-            builder = new movbuilder.MotionJPEGBuilder();
-            $("#canvas").width($("#image").width());$("#canvas").height($("#image").height());
-            builder.setup(  $("#canvas").width(),$("#canvas").height(),10 /* FPS */ );
-        }
+    function showVideo() {
         if (videoIdx<imageArray.length) {
             $("#akt_image").html(getTime(imageList[videoIdx]));
             $("#count").html((animateBegin + imageArray.length - videoIdx) + "/" + imageList.length);
             $("#slider").slider("option", "value", animateBegin + imageArray.length - videoIdx - 1);
             $("#image").attr("src", imageArray[videoIdx].src);
-            if (saveVideo) {
-                var ctx = document.getElementById('canvas');
-                if (canvas.getContext) {
-                    var ctx = canvas.getContext('2d');
-                    var img1 = new Image();
-                    img1.src = imageArray[videoIdx].src;
-                    //drawing the image
-                    img1.onload = function () {
-                        ctx.drawImage(img1, 0, 0);
-                    };
-                }
-                builder.addCanvasFrame(document.getElementById("canvas"));
-            }
             videoIdx++;
-            setTimeout(showVideo, 100);
+            setTimeout(showVideo, 70);
         } else {
             videoIdx=0;
-            if(saveVideo) {
-                builder.finish(function (generatedURL) {
-                    window.open(generatedURL);
-                });
-            }
         }
     }
-
-
-
-    function deleteRange() {
-        if ($( "#actionslider" ).slider("values").length==2) {
-            deleteBegin=$( "#actionslider" ).slider("values")[0];
-            deleteEnd=$( "#actionslider" ).slider("values")[1];
-            deleteImage();
-        }
-    }
-
-    <?php if ($camName!="all") {?>
+<?php }?>
+<?php if ($camName!="all") {?>
 
     function showImage() {
         var src;
@@ -333,6 +304,18 @@ if ($action=="deleteday" && isUserRoot()) {
             $("#image").attr("src",src);
         }
         return src;
+    }
+
+<?php }?>
+
+<?php if (isUserRoot() && $camName!="all") {?>
+
+    function deleteRange() {
+        if ($( "#actionslider" ).slider("values").length==2) {
+            deleteBegin=$( "#actionslider" ).slider("values")[0];
+            deleteEnd=$( "#actionslider" ).slider("values")[1];
+            deleteImage();
+        }
     }
 
     function deleteImage() {
@@ -366,9 +349,7 @@ if ($action=="deleteday" && isUserRoot()) {
             }
         });
     }
-    <?php }?>
 
-    <?php if (isUserRoot()) {?>
     //delete day images
     function deleteDay() {
         if (confirm("Please confirm, that you want to delete all images from the selected day?") ) {
@@ -418,7 +399,7 @@ if ($action=="deleteday" && isUserRoot()) {
         window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
     }
 
-    <?php }?>
+<?php }?>
 
 
     //Show images called by changing the camera or image type
@@ -475,12 +456,6 @@ if ($action=="deleteday" && isUserRoot()) {
         $.ajax({
             url: "getAllLastImages.php",
             success:function(data){
-                $("#tollbardate").hide();
-                $("#tollbartop").hide();
-                $("#slider").hide();
-                $("#actionslider").hide();
-                $("#range").hide();
-                $("#imagetype").hide();
                 var cams= new Array;
                 var zipped= new Array;
                 <?php foreach (Constants::getCameras() as $cn=>$camPropertys) {?>
@@ -508,10 +483,6 @@ if ($action=="deleteday" && isUserRoot()) {
         cams.push('<?php echo $cn ?>');
         <?php } ?>
         $("#image").css("display","inline");
-        $("#tollbardate").show();
-        $("#tollbartop").show();
-        //$("#slider").show();
-        $("#imagetype").show();
         for (var i=0; i<cams.length; i++) {
             $("#image_"+cams[i]).remove();
         }
@@ -611,9 +582,7 @@ if ($action=="deleteday" && isUserRoot()) {
         if (s.substring(0,1)==" ") {
             return s.substring(1,s.length);
         }
-        else {
-            return s;
-        }
+        return s;
     }
 
 

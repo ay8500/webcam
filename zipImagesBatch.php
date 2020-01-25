@@ -3,9 +3,10 @@
 //the main function is zipImages from the php file  zipImages.php
 include_once 'config.php';
 include_once 'zipImages.php';
-include_once __DIR__.'/../lpfw/logger.class.php';
+include_once 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
 
-setLoggerType(loggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
 
 foreach (Constants::getCameras() as $camName=>$propertys) {
     if($propertys["zip"]) {
@@ -20,7 +21,7 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
         $text .= " Days:" . $ret->daysZipped;
         $text .= " Mail pictures:" . count($ret->sendMail);
         $text .= " Mails sent:" . ($mailsSent?"ok":"error");
-        logger($text, loggerLevel::debug);
+        \maierlabs\lpfw\Logger::_($text, \maierlabs\lpfw\LoggerLevel::debug);
         echo($text . "<br/>\n");
     }
 

@@ -1,6 +1,7 @@
 <?php
 include_once 'config.php';
-include_once __DIR__.'/../lpfw/logger.class.php';
+include_once 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
 
 /**
  * Delete images from one day
@@ -27,6 +28,6 @@ function deleteImagesFromDay($camType, $camName, $day)
         }
         $directory->close();
     }
-    logger("Delete day date:" . $day->format("Ymd") . " files:" . $fileDeletedCount, loggerLevel::info);
+    \maierlabs\lpfw\Logger::_("Delete day date:" . $day->format("Ymd") . " files:" . $fileDeletedCount, \maierlabs\lpfw\LoggerLevel::info);
     return  "Files deleted:" . $fileDeletedCount;
 }
