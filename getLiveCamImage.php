@@ -1,11 +1,16 @@
 <?php
+/**
+ * This script will return the latest camera picture
+ * Vers: 1.2.0
+ */
+
 include 'config.php';
 include_once 'bifi.class.php';
 
 
 if (isset($_GET['camname'])) {
     $camname=$_GET['camname'];
-    if (!Constants::getCameras()[$camname]["webcam"]) {
+    if (!isset(Constants::getCameras()[$camname]) || !Constants::getCameras()[$camname]["webcam"]) {
         header("HTTP/1.0 400 Bad Request");
         echo("Cam not allowed as webcam!");
         die();
@@ -15,12 +20,6 @@ if (isset($_GET['camname'])) {
     echo("Parameter camname ist empty");
     die();
 }
-
-if (isset($_GET['delete']))
-    $delete=true;
-else
-    $delete=false;
-
 
 $filter=".";
 
@@ -37,7 +36,7 @@ if(Constants::getCameras()[$camname]["zip"]) {
             $latest_filename = $file;
         }
     }
-    //newws zip file found
+    //newest zip file found
     if ($latest_filename!="") {
         $zip = new BiFi();
         $fzip=$path.substr($latest_filename,0,strlen($latest_filename)-4);
@@ -53,35 +52,22 @@ if(Constants::getCameras()[$camname]["zip"]) {
     }
 } else {
     while ($file = $directory->read()) {
-        if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) && strstr($file,$filter) ) {
-            $akt_time=intval(filemtime(Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"].$file));
-            if ( $akt_time > $latest_ctime) {
+        if (in_array(strtolower(substr($file, -4)), array(".jpg", ".gif", ".png")) && strstr($file, $filter)) {
+            $akt_time = intval(filemtime(Constants::IMAGE_ROOT_PATH . Constants::getCameras()[$camname]["path"] . $file));
+            if ($akt_time > $latest_ctime) {
                 $latest_ctime = $akt_time;
                 $latest_filename = $file;
             }
         }
     }
-    if ($latest_filename!="") {
-        $im = imagecreatefromjpeg(Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"].$latest_filename);
+    if ($latest_filename != "") {
+        $im = imagecreatefromjpeg(Constants::IMAGE_ROOT_PATH . Constants::getCameras()[$camname]["path"] . $latest_filename);
         //if ($im) {
-        Header ("Content-type: image/jpg");
-        ImageJpeg ($im);
-        ImageDestroy ($im);
+        Header("Content-type: image/jpg");
+        ImageJpeg($im);
+        ImageDestroy($im);
         //}
     }
     $directory->close();
-
-    if($delete) {
-        $directory = dir($path);
-        while ($file = $directory->read()) {
-            if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) && strstr($file,$filter) ) {
-                if (filemtime(Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"].$file) < $latest_ctime) {
-                    unlink(Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"].$file);
-                }
-            }
-        }
-        $directory->close();
-    }
 }
-
 ?>

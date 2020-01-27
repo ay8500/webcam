@@ -1,25 +1,24 @@
 <?php
+/**
+ * This script will return the latest picture from each camera
+ * Vers: 1.2.0
+ */
 include 'config.php';
 include_once 'bifi.class.php';
 
 header('Content-Type: application/json');
 
-
 $images_array= array();
-
 $filter="";
 
-$idx=0;
-
 foreach (Constants::getCameras() as $camName=>$propertys) {
-    $path =Constants::IMAGE_ROOT_PATH.$propertys["path"];
-    $directory = dir($path);
+    $path = Constants::IMAGE_ROOT_PATH.$propertys["path"];
     $latest_ctime = 1;
     $latest_filename = '';
     $akttime="";
-    if ((isUserRoot() || isUserView() || $propertys["webcam"] ) && $directory!==false) {
+    if (isUserRoot() || isUserView() || $propertys["webcam"]  ) {
         if ($propertys["zip"]) {
-
+            $directory = dir($path);
             while ($file = $directory->read()) {
                 $akttime=intval(substr($file, 3,8));
                 if (strtolower(substr($file, -4))===".bfi" &&  $akttime> $latest_ctime) {
@@ -37,35 +36,33 @@ foreach (Constants::getCameras() as $camName=>$propertys) {
                 $item=$zip->statIndex($zip->numFiles-1);
                 $zip->close();
                 $ret=array();
-                $ret["date"]=$latest_ctime;
+                $ret["date"]=$latest_ctime.'';
                 $ret["name"]=key($item);
                 $images_array[$camName] =$ret;
+            } else {
+                $images_array[$camName] =array("name"=>null,"date"=>null);
             }
+            $directory->close();
+
         } else {
-            while ($file = $directory->read()) {
-                if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png"))
-                    && ($filter=="" || strstr($file,$filter)) && intval(filemtime($path.$file)) > $latest_ctime) {
-                    $latest_ctime = intval(filemtime($path.$file));
-                    $latest_filename = $file;
+            $path = Constants::IMAGE_ROOT_PATH.$propertys["path"];
+            $files = getFileList($path,$propertys["patternRegEx"]);
+            foreach ($files as $f) {
+                if (($filter=="" || strstr($f["name"],$filter)) && intval($f["lastmod"]) > $latest_ctime) {
+                    $latest_ctime = intval($f["lastmod"]);
+                    $latest_filename = str_replace(Constants::IMAGE_ROOT_PATH.$propertys["path"],'',$f["name"]);
                 }
             }
             if ($latest_filename!="") {
                 $date = (new DateTime)->setTimestamp($latest_ctime);
-                unset($ret["zip"]);
                 $ret["date"] = $date->format("Ymd");
                 $ret["name"] =$propertys["path"].$latest_filename;
                 $images_array[$camName] = $ret;
             }
         }
-        $directory->close();
-    } else {
-        $images_array[$camName]=array();
     }
 
 
 }
-
-
 echo(json_encode($images_array));
-
 ?>

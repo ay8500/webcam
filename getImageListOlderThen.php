@@ -1,4 +1,8 @@
 <?php
+/**
+ * This script will delete older pictures than the day parameter from the archive or filesystem
+ * Vers: 1.2.0
+ */
 include 'config.php';
 
 header('Content-Type: application/json');
@@ -40,6 +44,7 @@ while ($file = $directory->read()) {
 			}
 		}
 	} else {
+		//TODO recursive delete of files in subdirectories
 		if (in_array(strtolower(substr($file, -4)), array(".jpg", ".gif", ".png"))&&
 			filemtime($path . $file)<intval($day->format("U"))
 		)

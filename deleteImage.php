@@ -1,11 +1,14 @@
 <?php
+/**
+ * Script to delete one image from file system
+ * Vers. 1.2.0
+*/
 include 'config.php';
 include_once 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
 
 header('Content-Type: application/json');
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
-
 
 if (isset($_GET['filename']))
 	$filename=$_GET['filename'];

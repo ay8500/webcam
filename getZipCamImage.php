@@ -1,4 +1,9 @@
 <?php
+/**
+ * This script will return a picture from the archive
+ * Vers: 1.2.0
+ */
+
 include 'config.php';
 include_once 'bifi.class.php';
 
@@ -32,7 +37,8 @@ if($imagedate=="undefined" || $imagename=="undefined") {
     return;
 }
 
-$imgPath=Constants::getCameras()[$camname]["path"];
+$camera = Constants::getCameras()[$camname];
+$imgPath=$camera["path"];
 $path =Constants::IMAGE_ROOT_PATH.$imgPath;
 $fzip=$path."cam".$imagedate.".zip";
 $zip = new BiFi();
@@ -44,7 +50,6 @@ if ($zip->open($fzip)) {
     Header ("Content-type: image/jpg");
     ImageJpeg ($im);
     ImageDestroy ($im);
-
 }
 
 ?>

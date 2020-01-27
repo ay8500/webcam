@@ -1,4 +1,9 @@
 <?php
+/**
+ * This script will delete a picture from the archive
+ * Vers: 1.2.0
+ */
+
 include 'config.php';
 include_once 'bifi.class.php';
 include __DIR__.'/../lpfw/logger.class.php';

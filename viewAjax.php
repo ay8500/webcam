@@ -1,4 +1,8 @@
 <?PHP
+/**
+ * Webcam by Maierlags (c) 2016-2020
+ * Vers: 1.2.0
+ */
 include 'config.php';
 include_once __DIR__.'/../lpfw/logger.class.php';
 include_once 'zipImages.php';
@@ -43,7 +47,7 @@ if ($action=="zipImages" && isUserRoot()) {
 if ($action=="reorganizeImages" && isUserRoot()) {
     $zip= new BiFi();
     //Server path
-    $fileName=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camName]["path"]."cam".$day->format('Ymd').".zip";
+    $fileName=Constants::IMAGE_ROOT_PATH.Constants::getZipPath(Constants::getCameras()[$camName])."cam".$day->format('Ymd').".zip";
     $zip->open($fileName);
     $ret=$zip->reorganize(false);
     if($ret!==false) {
@@ -87,7 +91,6 @@ if ($action=="deleteday" && isUserRoot()) {
                 <?php foreach (Constants::getCameras() as $camn=>$camPropertys) {
                     if ($camPropertys["webcam"] || isUserView() || isUserRoot() || $camPropertys["webcam"]) {
                         if ($camn == $camName) {
-                            $camPath = $camPropertys["path"];
                             echo('<option selected value="' . $camn . '">' . $camn . '</option>');
                         } else {
                             echo('<option value="' . $camn . '">' . $camn . '</option>');
@@ -139,7 +142,7 @@ if ($action=="deleteday" && isUserRoot()) {
         $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
         for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
             <div class="calendarBody">
-                <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camPath,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
+                <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
             </div>
             <?php $calendarDate->modify("1 month");  ?>
         <?php }  ?>
@@ -174,7 +177,7 @@ if ($action=="deleteday" && isUserRoot()) {
     <?php if ($camName!="all") {?>
     <div id="slider"></div>
     <?php if (isUserRoot()) {?><div id="actionslider"></div><?php }?>
-    <?php if(isUserView() || isUserRoot() || ($camName!="all" && Constants::getCameras()[$camName]["path"])) {?>
+    <?php if(isUserView() || isUserRoot() || ($camName!="all") ) {?>
         <span title="Range" id="range">0</span>
         <?php if (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"]) {?>
             <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create Video</button>
@@ -599,7 +602,7 @@ if ($action=="deleteday" && isUserRoot()) {
  * @param number $month
  */
 
-function getBookedDays($camName,$path,$type,$year=0,$month=0){
+function getBookedDays($camName,$type,$year=0,$month=0){
 
     if ($year == 0) {
         $referenceDay    = new DateTime(date("Y")."-".date("n")."-1");
@@ -611,7 +614,7 @@ function getBookedDays($camName,$path,$type,$year=0,$month=0){
         $referenceDay    = (new DateTime)->setTimestamp(mktime(0,0,0,$month,1,$year));
     }
 
-    return getFileCount($camName,$referenceDay,$path,$type);
+    return getFileCount($camName,$referenceDay,$type);
 }
 
 /**
@@ -621,29 +624,31 @@ function getBookedDays($camName,$path,$type,$year=0,$month=0){
  * @param unknown $type
  * @return number
  */
-function getFileCount($camName,$startday,$path,$type) {
+function getFileCount($camName,$startday,$type) {
     $ret = array();
-    $dateStart=$startday->format('Ym');
+    $dateSelectedMonth=$startday->format('Ym');
     if (Constants::getCameras()[$camName]["zip"]) {
         $zip = new BiFi();
         for($day=1;$day<32;$day++) {
-            $fzip=Constants::IMAGE_ROOT_PATH.$path."cam".$dateStart.($day<10?"0".$day:$day).".zip";
+            $fzip=Constants::IMAGE_ROOT_PATH.Constants::getCameras()["$camName"]["path"]."cam".$dateSelectedMonth.($day<10?"0".$day:$day).".zip";
             $zip->open($fzip);
             $c=$zip->getArchiveFileCount($type);
             if ($c>0) $ret[$day]=$c;
         }
     } else {
-        $directory = dir(Constants::IMAGE_ROOT_PATH.$path);
-        while (false !== ($file = $directory->read())) {
-            $fdate = (new DateTime())->setTimestamp(filemtime(Constants::IMAGE_ROOT_PATH . $path . $file));
-            if (in_array(strtolower(substr($file, -4)), array(".jpg",".gif",".png")) &&
-                ($type=="" || strstr($file,$type)) &&
-                $dateStart == $fdate->format("Ym"))
-            {
-                if (isset($ret[$fdate->format("j")])) $ret[$fdate->format("j")] += 1; else $ret[$fdate->format("j")] = 1;
+        $path = Constants::getCameras()[$camName]["path"];
+        $files=getFileList($path,Constants::getCameras()[$camName]["patternRegEx"]);
+        foreach ($files as $f) {
+            $d =(new DateTime())->setTimestamp($f["lastmod"] );
+            if (($type=="" || strstr($f["name"],$type)) &&
+                $dateSelectedMonth == $d->format("Ym")) {
+                if (isset($ret[$d->format("j")]))
+                    $ret[$d->format("j")] += 1;
+                else
+                    $ret[$d->format("j")] = 1;
             }
+
         }
-        $directory->close();
     }
     return $ret;
 }

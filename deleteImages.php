@@ -5,6 +5,7 @@ include_once Config::$lpfw.'logger.class.php';
 
 /**
  * Delete images from one day
+ * Vers. 1.2.0
  * @param string $camType
  * @param string $camName
  * @param DateTime $day
@@ -12,21 +13,20 @@ include_once Config::$lpfw.'logger.class.php';
  */
 function deleteImagesFromDay($camType, $camName, $day)
 {
-    $path = Constants::IMAGE_ROOT_PATH . Constants::getCameras()[$camName]["path"];
     $fileDeletedCount = 0;
+    $camera=Constants::getCameras()[$camName];
+    $path = Constants::IMAGE_ROOT_PATH . $camera["path"];
     if (Constants::getCameras()[$camName]["zip"]) {
         $fileName = $path . "cam" . $day->format('Ymd') . ".zip";
         $fileDeletedCount += unlink($fileName . ".bfi")?1:0;
         $fileDeletedCount += unlink($fileName . ".bfd")?1:0;
     } else {
-        $directory = dir($path);
-        while ($file = $directory->read()) {
-            if (in_array(strtolower(substr($file, -4)), array(".jpg", ".gif", ".png")) &&
-                ($camType == "" || strstr($file, $camType)) && (new DateTime())->setTimestamp(filemtime($path . $file))->format("Ymd") === $day->format("Ymd")) {
-                $fileDeletedCount += unlink($path . $file)?1:0;
-            }
+        $files = getFileList($path,$camera["patternRegEx"]);
+        foreach ($files as $f){
+            $d = (new DateTime())->setTimestamp($f["lastmod"] );
+            if (($camType == "" || strstr($f["name"], $camType)) && $d->format("Ymd") === $day->format("Ymd")) {
+                $fileDeletedCount += unlink($f["name"])?1:0;
         }
-        $directory->close();
     }
     \maierlabs\lpfw\Logger::_("Delete day date:" . $day->format("Ymd") . " files:" . $fileDeletedCount, \maierlabs\lpfw\LoggerLevel::info);
     return  "Files deleted:" . $fileDeletedCount;

@@ -1,6 +1,6 @@
 <?php
 /**
- * BigFile achive system by Levi
+ * BigFile achive system by Maierlabs
  * @author Levi
  * @version 2.0
  */

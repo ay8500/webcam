@@ -8,11 +8,11 @@ include_once Config::$lpfw.'logger.class.php';
 
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
 
-foreach (Constants::getCameras() as $camName=>$propertys) {
-    if($propertys["zip"]) {
+foreach (Constants::getCameras() as $camName=> $camera) {
+    if($camera["zip"]) {
         $ret = zipImages($camName,true,false);
         if (count($ret->sendMail)>0) {
-            $mailsSent=sendAlertMail($propertys["alertEmail"],$camName,$ret->sendMail);
+            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail);
         } else
             $mailsSent=true;
         $text = $camName . '=>  to be Zipped:' . $ret->tobeZipped ;
