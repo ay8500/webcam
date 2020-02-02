@@ -23,15 +23,15 @@ else
 	die("cam parameter is missing");
 
 if (isset(Constants::getCameras()[$camName]))
-	$propertys = Constants::getCameras()[$camName];
+	$camera = Constants::getCameras()[$camName];
 else
 	die("camera propertys not set");
 
 $count=0;
-$path =Constants::IMAGE_ROOT_PATH.$propertys["path"];
+$path =Constants::IMAGE_ROOT_PATH.$camera["path"];
 $directory = dir($path);
 while ($file = $directory->read()) {
-	if($propertys["zip"]) {
+	if($camera["zip"]) {
 		if (in_array(strtolower(substr($file, -4)), array(".bfd", ".bfi")) &&
 			(new DateTime(substr($file,3,8)))->format("U")<intval($day->setTime(0,0)->format("U"))
 			)

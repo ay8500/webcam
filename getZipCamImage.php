@@ -29,14 +29,6 @@ else {
     die;
 }
 
-if($imagedate=="undefined" || $imagename=="undefined") {
-    $im=imagecreatefromjpeg("password.jpg");
-    Header ("Content-type: image/jpg");
-    ImageJpeg ($im);
-    ImageDestroy ($im);
-    return;
-}
-
 $camera = Constants::getCameras()[$camname];
 $imgPath=$camera["path"];
 $path =Constants::IMAGE_ROOT_PATH.$imgPath;

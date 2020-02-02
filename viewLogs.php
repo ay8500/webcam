@@ -1,6 +1,10 @@
 <?PHP
 include 'config.php';
 include 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
+include_once Config::$lpfw.'appl.class.php';
+
+use \maierlabs\lpfw\Appl as Appl;
 
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
 
@@ -14,7 +18,6 @@ $dateEarlier = clone ($day); $dateEarlier->modify("-1 month");
 $dateLater = clone ($day); $dateLater->modify("1 month");
 
 $systemMessage="";
-include_once Config::$lpfw.'logger.class.php';
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 
 
@@ -87,35 +90,42 @@ if ($action=="deleteday" && isUserRoot()) {
     for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {
         ?>
         <div class="calendarBody">
-            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),"",$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
+            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),"",$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day,Appl::__("TIMEZONE")); ?>
         </div>
     <?php $calendarDate->modify("1 month"); } ?>
     <form style="display: inline-block;"><button name="day" value="<?php echo $dateLater->format('Y-m-d')?>"><span class="glyphicon glyphicon-forward"> </span></button></form>
 </div>
 <div class="toolbar" id="tollbartop">
     <?php if (isUserRoot()):?>
-        <button name="action" value="deleteday" onclick="deleteDay();" title="Attention: all logs for the actual day will be deleted!">Delete logs for this day</button>
+        <button name="action" value="deleteday" onclick="deleteDay();" title="<?php Appl::_("Attention: all logs for the actual day will be deleted!")?>">
+            <?php Appl::_("Delete logs for this day")?>
+        </button>
     <?php endif;?>
     <span id="count" title="Log entrys">0</span>
 </div>
 <div id="clearboth"></div>
 <div class="toolbar" >
     <table id="logs">
-        <tr><td>No log entrys for this day.</td></tr>
+        <tr><td><?php Appl::_("No log entrys for this day.")?></td></tr>
     </table>
 </div>
 <div class="footer" id="tollbarfooter">
-    <?php if (isUserRoot()):?>
-        <button onclick="showImages()">Show Images</button>
-    <?php endif;?>
-    <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))">Enter password</button>
+    <button onclick="showImages()"><?php Appl::_("Show Images")?></button>
+
+
+    <?php if (isUserRoot() || isUserView()) {?>
+        <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
+    <?php } else {?>
+        <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
+    <?php }?>
 </div>
 <div id="password_div" style="display:none" >
     <input id="password"  type="password" placeholder="password" value=""/>
-    <button onclick="Cookie('password',$('#password').val());$('#password_div').slideUp('slow');location.reload();">Save</button>
-    <button onclick="$('#password').attr('type', 'text');">Show</button>
-    <button onclick="$('#password_div').slideUp('slow');">Cancel</button>
+    <button onclick="Cookie('password',$('#password').val());$('#password_div').slideUp('slow');location.reload();"><?php Appl::_("Save")?></button>
+    <button onclick="$('#password').attr('type', 'text');"><?php Appl::_("Show")?></button>
+    <button onclick="$('#password_div').slideUp('slow');"><?php Appl::_("Cancel")?></button>
 </div>
+
 <!-- Modal -->
 <div class="modal fade" id="myModal" role="dialog">
     <div class="modal-dialog">
@@ -159,7 +169,7 @@ if ($action=="deleteday" && isUserRoot()) {
     function loadLogList() {
         $("#akt_date").html(DateToString.dmy(date));
         $.ajax({
-            url: "getLogList.php?day="+DateToString.ymd(date),
+            url: "ajaxGetLogList.php?day="+DateToString.ymd(date),
             success:function(data){
                 fillHitList(data);
             }
@@ -189,129 +199,132 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function showip(ip) {
         $.ajax({
-            url: "http://ip-api.com/json/"+ip
+            url: "ajaxGetIpInfo.php?ip="+ip
         }).success(function(data) {
-            $(".modal-title").html("IP address:"+ip+" geo data");
-            $(".modal-body").html("Country:"+data.country+"<br/>Zipcode:"+data.zip+"<br/>City:"+data.city);
+            $(".modal-title").html("<?php Appl::_("IP address")?>:"+ip+"<?php Appl::_("geo data")?>");
+            var text = "<?php Appl::_("Country")?>:"+data.country+"<br/>";
+            text +="<?php Appl::_("Zipcode")?>:"+data.zip+"<br/>";
+            text +="<?php Appl::_("City")?>:"+data.city;
+            $(".modal-body").html(text);
             $('#myModal').modal({show: 'false' });
         });
     }
 
-    function getTime(s) {
-        k=s.split("-");
-        if (k.length==2) {
-            return k[1].substr(0,2)+":"+k[1].substr(2,2)+":"+k[1].substr(4,2);
+        function getTime(s) {
+            k=s.split("-");
+            if (k.length==2) {
+                return k[1].substr(0,2)+":"+k[1].substr(2,2)+":"+k[1].substr(4,2);
+            }
+            else return s;
         }
-        else return s;
-    }
 
-    var DateToString = {
-        ymd: function (d) {
-            var s=d.getFullYear().toString()+"-";
-            if (d.getMonth()<9) s=s+"0";
-            s=s+(d.getMonth()+1).toString() + "-"
-            if (d.getDate()<9) s=s+"0";
-            s=s+d.getDate().toString();
-            return s;
-        },
-        dmy: function (d) {
-            var s=d.getDate().toString()+".";
-            if (d.getMonth()<9) s=s+"0";
-            s=s+(d.getMonth()+1).toString() + "."+
-                d.getFullYear().toString() ;
-            return s;
-        }
-    };
+        var DateToString = {
+            ymd: function (d) {
+                var s=d.getFullYear().toString()+"-";
+                if (d.getMonth()<9) s=s+"0";
+                s=s+(d.getMonth()+1).toString() + "-"
+                if (d.getDate()<9) s=s+"0";
+                s=s+d.getDate().toString();
+                return s;
+            },
+            dmy: function (d) {
+                var s=d.getDate().toString()+".";
+                if (d.getMonth()<9) s=s+"0";
+                s=s+(d.getMonth()+1).toString() + "."+
+                    d.getFullYear().toString() ;
+                return s;
+            }
+        };
 
-    Date.prototype.addDays = function(days) {
-        this.setDate(this.getDate() + days);
-        return this;
-    };
+        Date.prototype.addDays = function(days) {
+            this.setDate(this.getDate() + days);
+            return this;
+        };
 
-    //read (value=null) or write cookies
-    function Cookie(name,value) {
-        if (value==null) {
-            a = document.cookie +";";
-            while(a != "")
-            {
-                var cookiename = a.substring(0,a.search("="));
-                cookiename = regTrim(cookiename);
-                var cookiewert = a.substring(a.search("=")+1,a.search(";"));
-                cookiewert = regTrim(cookiewert);
-                //if(cookiewert == "")
-                //	{cookiewert = a.substring(a.search("=")+1,a.length);}
-                if(name === cookiename) {
-                    return (decodeURIComponent(cookiewert));
+        //read (value=null) or write cookies
+        function Cookie(name,value) {
+            if (value==null) {
+                a = document.cookie +";";
+                while(a != "")
+                {
+                    var cookiename = a.substring(0,a.search("="));
+                    cookiename = regTrim(cookiename);
+                    var cookiewert = a.substring(a.search("=")+1,a.search(";"));
+                    cookiewert = regTrim(cookiewert);
+                    //if(cookiewert == "")
+                    //	{cookiewert = a.substring(a.search("=")+1,a.length);}
+                    if(name === cookiename) {
+                        return (decodeURIComponent(cookiewert));
+                    }
+                    i = a.search(";")+1;
+                    if(i == 0)
+                        i = a.length;
+                    a = a.substring(i,a.length);
                 }
-                i = a.search(";")+1;
-                if(i == 0)
-                    i = a.length;
-                a = a.substring(i,a.length);
+                return(null);
             }
-            return(null);
-        }
-        else {
-            document.cookie = name + "=" + escape (value) + "; expires=Mon, 23 Jul 2040 22:00:00 GMT";
-        }
-    }
-
-    function regTrim(s) {
-        if (s.substring(0,1)==" ") {
-            return s.substring(1,s.length);
-        }
-        else {
-            return s;
-        }
-    }
-
-
-</script>
-
-
-<?php
-
-/**
- * Array of log occurences in one mounth
- * @param number $year
- * @param number $month
- */
-
-function getBookedDays($year=0,$month=0){
-
-    if ($year == 0) {
-        $referenceDay    = new DateTime(date("Y")."-".date("n")."-1");
-        if ($month>0)
-            $referenceDay->modify('+'.$month.' month');
-        else
-            $referenceDay->modify($month.' month');
-    } else {
-        $referenceDay    = (new DateTime)->setTimestamp(mktime(0,0,0,$month,1,$year));
-    }
-
-    $ret = array();
-
-    $f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
-    $ln= 0;
-    while ($line= fgets ($f)) {
-        ++$ln;
-        $rr=explode("\t", $line,4);
-        $time=substr($rr[0],0,7);
-        $akttime=$referenceDay->format('Y-m');
-        if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info) {
-            $time=substr($rr[0],0,10);
-            for ($i=1;$i<10;$i++) {
-                if ($time==$akttime.'-0'.$i )
-                    if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
+            else {
+                document.cookie = name + "=" + escape (value) + "; expires=Mon, 23 Jul 2040 22:00:00 GMT";
             }
-            for ($i=10;$i<32;$i++) {
-                if ($time==$akttime.'-'.$i )
-                    if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
-            }
-
         }
-    }
-    fclose ($f);
 
-    return $ret;
-}
+        function regTrim(s) {
+            if (s.substring(0,1)==" ") {
+                return s.substring(1,s.length);
+            }
+            else {
+                return s;
+            }
+        }
+
+
+    </script>
+
+
+    <?php
+
+    /**
+     * Array of log occurences in one mounth
+     * @param number $year
+     * @param number $month
+     */
+
+    function getBookedDays($year=0,$month=0){
+
+        if ($year == 0) {
+            $referenceDay    = new DateTime(date("Y")."-".date("n")."-1");
+            if ($month>0)
+                $referenceDay->modify('+'.$month.' month');
+            else
+                $referenceDay->modify($month.' month');
+        } else {
+            $referenceDay    = (new DateTime)->setTimestamp(mktime(0,0,0,$month,1,$year));
+        }
+
+        $ret = array();
+
+        $f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
+        $ln= 0;
+        while ($line= fgets ($f)) {
+            ++$ln;
+            $rr=explode("\t", $line,4);
+            $time=substr($rr[0],0,7);
+            $akttime=$referenceDay->format('Y-m');
+            if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info) {
+                $time=substr($rr[0],0,10);
+                for ($i=1;$i<10;$i++) {
+                    if ($time==$akttime.'-0'.$i )
+                        if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
+                }
+                for ($i=10;$i<32;$i++) {
+                    if ($time==$akttime.'-'.$i )
+                        if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
+                }
+
+            }
+        }
+        fclose ($f);
+
+        return $ret;
+    }
 ?>

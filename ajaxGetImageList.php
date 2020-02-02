@@ -5,6 +5,7 @@
  */
 include 'config.php';
 include_once 'bifi.class.php';
+include_once 'cameraTools.php';
 
 header('Content-Type: application/json');
 
@@ -36,7 +37,7 @@ else
 
 $camera = isset(Constants::getCameras()[$camname])?Constants::getCameras()[$camname]:null;
 $images_array= array();
-if($camera==null || (!isUserOk() && !$camera["webcam"])) {
+if($camera==null || (!isUserRoot()  && !isUserView() && !$camera["webcam"])) {
     echo(json_encode($images_array));
     die();
 } else {
@@ -68,11 +69,3 @@ if($camera==null || (!isUserOk() && !$camera["webcam"])) {
         //Return the file list
         echo(json_encode($images_array));
 }
-
-function isUserOk() {
-    if (isset($_GET["password"])){
-        return $_GET["password"]===md5(Constants::PASSW_ROOT);
-    }
-    return isset($_COOKIE["password"]) && ( $_COOKIE["password"]==Constants::PASSW_ROOT || $_COOKIE["password"]==Constants::PASSW_VIEW );
-}
-?>

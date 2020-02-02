@@ -2,10 +2,9 @@
 class calendar{
 	
 	
-    function showCalendar($year,$month,$type,$cam,$booktDays=array(),$disabledDays=array(),$selectedDay=null){
-    	
-		$weekDays=array("So","Mo","Th","We","Th","Fr","Sa");   
-		
+    function showCalendar($year,$month,$type,$cam,$booktDays=array(),$disabledDays=array(),$selectedDay=null,
+                          $languge="en_US"){
+        setlocale(LC_ALL,$languge);
 		// Get today, reference day, first day and last day info
 		
 		if ($year == 0) {
@@ -25,15 +24,17 @@ class calendar{
 		
 		// Create a table with the necessary header informations
 		echo '<table class="month">';
-		echo '  <tr><th colspan="7">'.$referenceDay->format('F')." - ".$referenceDay->format('Y')."</th></tr>";
+		echo '  <tr><th colspan="7">'.strftime("%B",date_timestamp_get($referenceDay))." - ".$referenceDay->format('Y')."</th></tr>";
 	
 		//fist day for english language
 		$firstDayOfTheWeek = 1;
 
 		//Display the weekdays So Mo Th .... 
 		echo '<tr class="calendarCell calendarDays" >';
+		$week = new DateTime("this week");
 		for ($i=$firstDayOfTheWeek;$i<$firstDayOfTheWeek+7;$i++) {
-				echo '<td>'.$weekDays[$i % 7].'</td>';
+				echo '<td>'.strftime("%a",date_timestamp_get($week)).'</td>';
+				$week->modify("+1 day");
 		}
 		echo '</tr>' ;
 		

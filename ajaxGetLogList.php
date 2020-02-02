@@ -1,4 +1,9 @@
 <?php
+/**
+ * This script returns the list of log entry in json format for a specified day.
+ * Only works with root rights
+ * Vers. 1.2.0
+ **/
 include_once 'config.php';
 include_once 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
@@ -9,7 +14,7 @@ if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); e
 
 $log= array();
 
-if(isUserOk()) {
+if(isUserRoot()) {
 	$r=array();
 	$f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
 	$ln= 0;
@@ -26,12 +31,6 @@ if(isUserOk()) {
 		}
 	}
 	fclose ($f);
-	
 }
-
 echo(json_encode($log));
 
-function isUserOk() {
-	return isset($_COOKIE["password"]) && ( $_COOKIE["password"]==Constants::PASSW_ROOT || $_COOKIE["password"]==Constants::PASSW_VIEW );
-}
-?>

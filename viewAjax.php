@@ -1,13 +1,17 @@
 <?PHP
 /**
- * Webcam by Maierlags (c) 2016-2020
+ * Webcam by Maierlabs (c) 2016-2020
  * Vers: 1.2.0
  */
 include 'config.php';
-include_once __DIR__.'/../lpfw/logger.class.php';
-include_once 'zipImages.php';
+include_once 'config.class.php';
+include_once Config::$lpfw.'logger.class.php';
+include_once Config::$lpfw.'appl.class.php';
 include_once 'bifi.class.php';
-include_once 'deleteImages.php';
+include_once 'cameraTools.php';
+
+use maierlabs\lpfw\Appl as Appl;
+
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 \maierlabs\lpfw\Logger::setLoggerLevel(\maierlabs\lpfw\LoggerLevel::info);
 
@@ -26,19 +30,30 @@ $scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
 $script=$scriptArray[sizeof($scriptArray)-1];
 
 $systemMessage="";
-$userRight=isUserRoot()?'R':'';
-$userRight.=isUserView()?'W':'';
 
 if ($camName!="all") {
-    $propertys = Constants::getCameras()[$camName];
-    if (!isset($propertys["snap"]) && !isset($propertys["alert"]))
+    $camera = Constants::getCameras()[$camName];
+    if (!isset($camera["snap"]) && !isset($camera["alert"]))
         $camType="";
 }
 
-\maierlabs\lpfw\Logger::_("View:".$day->format("Y.m.d")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRight,\maierlabs\lpfw\LoggerLevel::info);
+if (isUserRoot()) $_SESSION["uRole"]='admin'; // need for the lpfw LeviPhpFrameWork
+
+$userRightText=(isUserRoot()?'R':'').(isUserView()?'W':'');
+\maierlabs\lpfw\Logger::_("View:".$day->format("Y.m.d")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRightText,\maierlabs\lpfw\LoggerLevel::info);
+
+//Testmail
+if ($action=="testmail" && isUserRoot()) {
+    $text = "<html><body><h2>Testmail</h2>Date:".date("l Y.F.d h:i:s");
+    $text .= "<p>Disk free space:".number_format(disk_free_space('./')/1024/1024,2,',','.')." Mbyte</p>";
+    $text .= "</body></html>";
+    $ret=sendSmtpMail("levi@blue-l.de",$text);
+    $systemMessage="Sending result of test mail:".($ret?"Ok":"Error");
+}
 
 //Zip the files in one zipfile per day
 if ($action=="zipImages" && isUserRoot()) {
+    error_reporting(E_ALL);
     $zip=zipImages($camName,true,false);
     $systemMessage="Files zipped date:".$day->format("Ymd")." files:".$zip->filesZipped." deleted:".$zip->deleted." days:".$zip->daysZipped;
     \maierlabs\lpfw\Logger::_($systemMessage,\maierlabs\lpfw\LoggerLevel::info);
@@ -47,7 +62,7 @@ if ($action=="zipImages" && isUserRoot()) {
 if ($action=="reorganizeImages" && isUserRoot()) {
     $zip= new BiFi();
     //Server path
-    $fileName=Constants::IMAGE_ROOT_PATH.Constants::getZipPath(Constants::getCameras()[$camName])."cam".$day->format('Ymd').".zip";
+    $fileName=Constants::IMAGE_ROOT_PATH.$camera["path"]."cam".$day->format('Ymd').".zip";
     $zip->open($fileName);
     $ret=$zip->reorganize(false);
     if($ret!==false) {
@@ -85,9 +100,9 @@ if ($action=="deleteday" && isUserRoot()) {
     <div id="type">
         <form>
             <input type="hidden" name="day" value="<?php echo date_format($day, 'Y-n-j') ?>" />
-            Cam:
+            <?php echo Appl::_("Cam")?>
             <select id="camname" name="cam" onchange="submit()">
-                <option value="all" >all</option>
+                <option value="all" ><?php echo Appl::_("all")?></option>
                 <?php foreach (Constants::getCameras() as $camn=>$camPropertys) {
                     if ($camPropertys["webcam"] || isUserView() || isUserRoot() || $camPropertys["webcam"]) {
                         if ($camn == $camName) {
@@ -100,23 +115,29 @@ if ($action=="deleteday" && isUserRoot()) {
                 ?>
             </select>
             <span id="imagetype">
-				<?php if ((isset($propertys["snap"]) || isset($propertys["alert"])) && ""!=$camType) :?>
-                    <span>All:</span><span><input type="radio" name="type" value="" onclick="submit()"/></span>
+				<?php if ((isset($camera["snap"]) || isset($camera["alert"])) && ""!=$camType) :?>
+                    <span><?php echo Appl::_("all")?>:</span>
+                    <span><input type="radio" name="type" value="" onclick="submit()"/></span>
                 <?php  endif; ?>
-                <?php if ((isset($propertys["snap"]) || isset($propertys["alert"])) && ""==$camType) :?>
-                    <span>All:</span><span><input type="radio" name="type" value="" checked onclick="submit()"/></span>
+                <?php if ((isset($camera["snap"]) || isset($camera["alert"])) && ""==$camType) :?>
+                    <span><?php echo Appl::_("all")?>:</span>
+                    <span><input type="radio" name="type" value="" checked onclick="submit()"/></span>
                 <?php  endif; ?>
-				<?php if (isset($propertys["snap"]) && $propertys["snap"]!=$camType) :?>
-                    <span>Snapshot:</span><span><input type="radio" name="type" value="Schedule_" onclick="submit()"/></span>
+				<?php if (isset($camera["snap"]) && $camera["snap"]!=$camType) :?>
+                    <span><?php echo Appl::_("Snapshot")?>:</span>
+                    <span><input type="radio" name="type" value="<?php echo $camera["snap"]?>" onclick="submit()"/></span>
                 <?php  endif; ?>
-                <?php if (isset($propertys["snap"]) && $propertys["snap"]==$camType) :?>
-                    <span>Snapshot:</span><span><input type="radio" name="type" value="Schedule_" checked onclick="submit()"/></span>
+                <?php if (isset($camera["snap"]) && $camera["snap"]==$camType) :?>
+                    <span><?php echo Appl::_("Snapshot")?>:</span>
+                    <span><input type="radio" name="type" value="<?php echo $camera["snap"]?>" checked onclick="submit()"/></span>
                 <?php  endif; ?>
-                <?php if (isset($propertys["alert"]) && $propertys["alert"]!=$camType) :?>
-                    <span>Alert:</span><span><input type="radio" name="type" value="MDAlarm_"  onclick="submit()"/></span>
+                <?php if (isset($camera["alert"]) && $camera["alert"]!=$camType) :?>
+                    <span><?php echo Appl::_("Alert")?>:</span>
+                    <span><input type="radio" name="type" value="<?php echo $camera["alert"]?>"  onclick="submit()"/></span>
                 <?php  endif; ?>
-                <?php if (isset($propertys["alert"]) && $propertys["alert"]==$camType) :?>
-                    <span>Alert:</span><span><input type="radio" name="type" value="MDAlarm_"  checked onclick="submit()"/></span>
+                <?php if (isset($camera["alert"]) && $camera["alert"]==$camType) :?>
+                    <span><?php echo Appl::_("Alert")?>:</span>
+                    <span><input type="radio" name="type" value="<?php echo $camera["alert"]?>"  checked onclick="submit()"/></span>
                 <?php  endif; ?>
 				</span>
         </form>
@@ -142,7 +163,7 @@ if ($action=="deleteday" && isUserRoot()) {
         $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
         for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
             <div class="calendarBody">
-                <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day); ?>
+                <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day,Appl::__("TIMEZONE")); ?>
             </div>
             <?php $calendarDate->modify("1 month");  ?>
         <?php }  ?>
@@ -154,9 +175,9 @@ if ($action=="deleteday" && isUserRoot()) {
     </div>
     <div class="toolbar">
         <div style="display: inline-block;">
-            <button name="action" value="daybefore" onclick="dayBefore();"><span class="glyphicon glyphicon-backward"></span> Day</button>
-            <button name="action" value="dayafter" onclick="dayAfter();">Day <span class="glyphicon glyphicon-forward"></span></button>
-            <button name="action" value="today" onclick="dayToday();">Today</button>
+            <button name="action" value="daybefore" onclick="dayBefore();"><span class="glyphicon glyphicon-backward"></span> <?php Appl::_("Day")?></button>
+            <button name="action" value="dayafter" onclick="dayAfter();"><?php Appl::_("Day")?> <span class="glyphicon glyphicon-forward"></span></button>
+            <button name="action" value="today" onclick="dayToday();"><?php Appl::_("Today")?></button>
         </div>
         <div style="display: inline-block;">
             <button name="action" value="next" onclick="imageOlder();"> <span class="glyphicon glyphicon-arrow-left"> </span> </button>
@@ -164,9 +185,9 @@ if ($action=="deleteday" && isUserRoot()) {
             <button name="action" value="last" onclick="imageLast();"> <span class="glyphicon glyphicon-fast-forward"> </span> </button>
         </div>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        <span id="count" title="The actual picture and the number of pictures">0</span>
-        <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="Deleted pictures in the archive"></span>
-            Date:<span id="akt_date">...</span> File:<span id="akt_image">...</span>
+        <span id="count" title="<?php Appl::_("The actual picture and the number of pictures")?>">0</span>
+        <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="<?php Appl::_("Deleted pictures in the archive")?>"></span>
+        <?php Appl::_("Date")?>:<span id="akt_date">...</span> <?php Appl::_("File")?>:<span id="akt_image">...</span>
     </div>
     <div id="clearboth"></div>
 <?php } ?>
@@ -175,35 +196,39 @@ if ($action=="deleteday" && isUserRoot()) {
 </div>
 <div class="footer">
     <?php if ($camName!="all") {?>
-    <div id="slider"></div>
-    <?php if (isUserRoot()) {?><div id="actionslider"></div><?php }?>
-    <?php if(isUserView() || isUserRoot() || ($camName!="all") ) {?>
-        <span title="Range" id="range">0</span>
-        <?php if (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"]) {?>
-            <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> Create Video</button>
-            <button id="video" onclick="showVideo(); "><span class="glyphicon glyphicon-film"></span> Show Video</button>
+        <div id="slider"></div>
+        <?php if(isUserView() || isUserRoot() || ($camName!="all") ) {?>
+            <?php if (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"]) {?>
+                <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Create Video")?></button>
+                <button id="video" onclick="showVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Show Video")?></button>
+            <?php }?>
+            <?php if (isUserRoot()):?>
+                <?php if (isset(Constants::getCameras()[$camName]) && Constants::getCameras()[$camName]["zip"]) {?>
+                     <button name="action" value="reorganizeImages" onclick="reorganizeImages();" title="Attention: all pictures will be reorganized!"><span class="glyphicon glyphicon-retweet"></span> Reorganize</button>
+                     <button name="action" value="zipImages" onclick="zipImages();" title="Attention: all pictures will be zipped!"><span class="glyphicon glyphicon-compressed"></span> Zip images</button>
+                <?php } ?>
+                <button name="action" value="delete" onclick="deleteImage();" title="Attention: the actual picture will be deleted!">  <span class="glyphicon glyphicon-remove-circle"></span> Delete image</button>
+                <button name="action" value="deleteday" onclick="deleteDay();" class="btn-warning" title="Attention: all pictures for the actual day will be deleted!"> <span class="glyphicon glyphicon-remove-circle"></span> Delete day</button>
+                <button name="action" value="deleteolder" onclick="deleteOldImages();" class="btn-danger" title="Attention: all older pictures as the actual showed day will be deleted!"><span class="glyphicon glyphicon-remove-circle"></span> Delete older</button>
+                <form style="display: inline"><button name="action" value="testmail" type="submit"><span class="glyphicon glyphicon-envelope"></span> Testmail</button></form>
+            <?php endif;?>
         <?php }?>
-        <?php if (isUserRoot()):?>
-            <button onclick="deleteRange();"><span class="glyphicon glyphicon-remove-circle"></span> Delete range</button>
-            <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> Show logs</button>
-            <?php if (isset(Constants::getCameras()[$camName]) && Constants::getCameras()[$camName]["zip"]) {?>
-                 <button name="action" value="reorganizeImages" onclick="reorganizeImages();" title="Attention: all pictures will be reorganized!"><span class="glyphicon glyphicon-retweet"></span> Reorganize</button>
-                 <button name="action" value="zipImages" onclick="zipImages();" title="Attention: all pictures will be zipped!"><span class="glyphicon glyphicon-compressed"></span> Zip images</button>
-            <?php } ?>
-            <button name="action" value="delete" onclick="deleteImage();" title="Attention: the actual picture will be deleted!">  <span class="glyphicon glyphicon-remove-circle"></span> Delete image</button>
-            <button name="action" value="deleteday" onclick="deleteDay();" class="btn-warning" title="Attention: all pictures for the actual day will be deleted!"> <span class="glyphicon glyphicon-remove-circle"></span> Delete day</button>
-            <button name="action" value="deleteolder" onclick="deleteOldImages();" class="btn-danger" title="Attention: all older pictures as the actual showed day will be deleted!"><span class="glyphicon glyphicon-remove-circle"></span> Delete older</button>
-        <?php endif;?>
+       <button onclick="showCamImages()"><span class="glyphicon glyphicon-refresh"></span> <?php Appl::_("Refresh pictures")?></button>
     <?php }?>
-    <button onclick="showCamImages()"><span class="glyphicon glyphicon-refresh"></span> Refresh pictures</button>
+    <?php if (isUserRoot()) {?>
+        <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> <?php Appl::_("Show logs")?></button>
     <?php }?>
-    <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> Login</button>
+    <?php if (isUserRoot() || isUserView()) {?>
+        <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
+    <?php } else {?>
+        <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
+    <?php }?>
 </div>
 <div id="password_div" style="display:none" >
     <input id="password"  type="password" placeholder="password" value=""/>
-    <button onclick="Cookie('password',$('#password').val());$('#password_div').slideUp('slow');location.reload();">Save</button>
-    <button onclick="$('#password').attr('type', 'text');">Show</button>
-    <button onclick="$('#password_div').slideUp('slow');">Cancel</button>
+    <button onclick="Cookie('password',$('#password').val());$('#password_div').slideUp('slow');location.reload();"><?php Appl::_("Save")?></button>
+    <button onclick="$('#password').attr('type', 'text');"><?php Appl::_("Show")?></button>
+    <button onclick="$('#password_div').slideUp('slow');"><?php Appl::_("Cancel")?></button>
 </div>
 <canvas id="canvas" width="1024" height="800" style="display: none"></canvas>
 </body>
@@ -214,8 +239,6 @@ if ($action=="deleteday" && isUserRoot()) {
     var date = new Date(<?php echo date_format($day, 'Y') ?>,<?php echo date_format($day, 'n') ?>-1,<?php echo date_format($day, 'j') ?>);
     var aktualImageIdx=0;
     var imageList = new Array;
-    var deleteBegin=-1;
-    var deleteEnd=-1;
 
     $( document ).ready(function() {
         $("#video").hide();
@@ -226,17 +249,6 @@ if ($action=="deleteday" && isUserRoot()) {
                 showImage();
             }
         });
-        <?php if (isUserView() || isUserRoot()) {?>
-            $( "#actionslider" ).slider({
-                range: true,
-                min: 0,	max: 0, values: [ 0, 0 ],
-                slide: function( event, ui ) {
-                    aktualImageIdx = ui.value;
-                    showImage();
-                    $( "#range" ).html( (ui.values[ 0 ]+1) + " - " + (ui.values[ 1 ]+1) );
-                }
-            });
-        <?php }?>
         <?php if ($camName=="all") {?>
             setInterval(function(){showAllLastImages(); }, 15000);
         <?php }?>
@@ -311,44 +323,28 @@ if ($action=="deleteday" && isUserRoot()) {
 
 <?php }?>
 
+<?php if (isUserRoot()) {?>
+    function showLogs() {
+        window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+    }
+<?php }?>
+
 <?php if (isUserRoot() && $camName!="all") {?>
 
-    function deleteRange() {
-        if ($( "#actionslider" ).slider("values").length==2) {
-            deleteBegin=$( "#actionslider" ).slider("values")[0];
-            deleteEnd=$( "#actionslider" ).slider("values")[1];
-            deleteImage();
-        }
-    }
-
     function deleteImage() {
-        if (deleteBegin>=0 && deleteEnd>=0 && deleteBegin<=deleteEnd)
-            aktualImageIdx=deleteBegin;
         $.ajax({
-            <?php if (Constants::getCameras()[$camName]["zip"]) {?>
-            url: "deleteZipImage.php?day=<?php echo $day->format("Ymd");?>&camname=<?php echo $camName;?>&filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+            <?php if ($camera["zip"]) {?>
+            url: "ajaxDeleteZipImage.php?day=<?php echo $day->format("Ymd");?>&camname=<?php echo $camName;?>&filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
             <?php } else {?>
-            url: "deleteImage.php?filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+            url: "ajaxDeleteImage.php?filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
             <?php } ?>
             success:function(data){
                 imageList.splice(aktualImageIdx, 1);
                 if (aktualImageIdx>imageList.length-1) //darauf achten, dass der Index des aktuellen Bildes immer im bereich des Arrays liegt.
                     aktualImageIdx=imageList.length-1;
-                $("#count").html((aktualImageIdx+1)+"/"+imageList.length);
-                if (deleteBegin==deleteEnd) {
-                    $( "#slider" ).slider("option", "max", imageList.length-1);
-                    <?php if (isUserRoot()):?>
-                    $( "#actionslider" ).slider("option", "max", imageList.length-1);
-                    <?php endif;?>
-                }
-                $( "#range" ).html( "0 - " + (imageList.length) );
-                deleteEnd--;
-                if (deleteBegin>=0 && deleteEnd>=0 && deleteBegin<=deleteEnd)
-                    deleteImage(); //Rekursiv löschen
-                else {
-                    showImage(); //am Ende des Löschens das Bild zeigen was noch da ist
-
-                }
+                $("#count").html((aktualImageIdx+1)+"/"+imageList.length-1);
+                $("#slider" ).slider("option", "max", imageList.length-1);
+                 showImage(); //am Ende des Löschens das Bild zeigen was noch da ist
             }
         });
     }
@@ -367,7 +363,7 @@ if ($action=="deleteday" && isUserRoot()) {
     }
 
     function reorganizeImages() {
-        if (confirm("Please confirm, that you want reorganize all images from the selected camera?") ) {
+        if (confirm("Please confirm, that you want to reorganize the images archive from the selected camera?") ) {
             window.location.href="<?php echo ( $script.'?action=reorganizeImages&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
         }
     }
@@ -375,7 +371,7 @@ if ($action=="deleteday" && isUserRoot()) {
     //check if old images should be deleted
     function deleteOldImages() {
         $.ajax({
-            url: "getImageListOlderThen.php?day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
+            url: "ajaxDeleteImagesOlderThen.php?day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
             success:function(data){
                 if (data.files>0) {
                     if (confirm("Confirm "+data.files+" files to be deleted")) {
@@ -389,7 +385,7 @@ if ($action=="deleteday" && isUserRoot()) {
     //calls ajax function to delete old pictures
     function deleteFiles() {
         $.ajax({
-            url: "getImageListOlderThen.php?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
+            url: "ajaxDeleteImagesOlderThen.php?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
             success:function(data){
                 if (confirm(data.files+" files deleted, do you want to refresch the site?")) {
                     location.reload();
@@ -397,11 +393,6 @@ if ($action=="deleteday" && isUserRoot()) {
             }
         });
     }
-
-    function showLogs() {
-        window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
-    }
-
 <?php }?>
 
 
@@ -425,26 +416,22 @@ if ($action=="deleteday" && isUserRoot()) {
         $("#akt_date").html(DateToString.dmy(date));
         $("#akt_image").html("");
         $("#count").html("0");
-        $( "#range").html( "0 - 0");
         aktualImageIdx=0;
         var type=$("input[name='type']:checked").val();
         if(type==null)
             type="";
         $.ajax({
-            url: "getImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname,
+            url: "ajaxGetImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname,
             success:function(data){
                 imageList=data.reverse();
                 if (imageList.length>0) {
                     showImage();
                     $( "#slider" ).slider("option", "max", imageList.length-1);
-                    $( "#actionslider" ).slider("option", "max", imageList.length-1);
-                    $( "#actionslider" ).slider("option", "values", [0,imageList.length-1]);
-                    $( "#range" ).html( "1 - " + (imageList.length) );
                 }
             }
         })
         $.ajax({
-            url: "getImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname+"&deleted=ask",
+            url: "ajaxGetImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname+"&deleted=ask",
             success:function(data){
                 if (data>0) {
                     $("#countDeleted").show().html(data);
@@ -457,7 +444,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function showAllLastImages() {
         $.ajax({
-            url: "getAllLastImages.php",
+            url: "ajaxGetAllNewestImages.php",
             success:function(data){
                 var cams= new Array;
                 var zipped= new Array;
@@ -482,7 +469,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function hideAllLastImages() {
         var cams= new Array;
-        <?php foreach (Constants::getCameras() as $cn=>$propertys) {?>
+        <?php foreach (Constants::getCameras() as $cn=>$camera) {?>
         cams.push('<?php echo $cn ?>');
         <?php } ?>
         $("#image").css("display","inline");

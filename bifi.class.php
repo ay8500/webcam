@@ -197,6 +197,7 @@ class BiFi {
 		}
 
         $count=0;
+        $this->numDeletedFiles=0;
         $fileContent='';
         while (!feof($fp)) {
             $fileContent.=fread($fp, self::BIFI_MAX_INDEX_LENGTH_IN_MEMORY);

@@ -15,16 +15,15 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
         $url=$this->getUrl();
         if($url==null)
             return;
-        $ret=$this->callAjaxUrl($url."getImageList.php",false);
+        $ret=$this->callAjaxUrl($url."ajaxGetImageList.php",false);
         $this->assertNotNull($ret);
         $this->assertSame("Parameter camname ist empty",$ret );
 
-        $ret=$this->callAjaxUrl($url."getImageList.php?camname=test",true);
+        $ret=$this->callAjaxUrl($url."ajaxGetImageList.php?camname=test",true);
         $this->assertNotNull($ret);
-        $this->assertCount(1,$ret);
-        $this->assertSame("./password.jpg",$ret[0] );
+        $this->assertCount(0,$ret);
 
-        $ret=$this->callAjaxUrl($url."getImageList.php?camname=test&day=2019-6-3&password=".md5(\Constants::PASSW_ROOT),true);
+        $ret=$this->callAjaxUrl($url."ajaxGetImageList.php?camname=test&day=2019-6-3&password=".md5(\Constants::PASSW_ROOT),true);
         $this->assertNotNull($ret);
         $this->assertCount(15,$ret);
         $this->assertSame("Schedule_20190603-033000.jpg",$ret[0] );

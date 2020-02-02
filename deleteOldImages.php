@@ -1,7 +1,7 @@
 <?php
 /**
  * This script delete old images or archives from file system
- * The affected images are thows who are older then Constants::BATCH_DELETE_OLDER_THAN_DAYS
+ * The affected images are older then Constants::BATCH_DELETE_OLDER_THAN_DAYS
  * Vers. 1.2.0
 */
 include_once 'config.php';

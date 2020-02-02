@@ -37,7 +37,7 @@ else {
 	die("Password required");
 }
 
-if ($password!=Constants::PASSW_ROOT) {
+if (!isUserRoot()) {
 	header("HTTP/1.0 400 Bad Request");
 	die ("Wrong Password");
 }
@@ -50,7 +50,7 @@ $fzip=$path."cam".date_format($day, 'Ymd').".zip";
 if ($zip->open($fzip)) {
 	if ($zip->deleteName($filename)) {
 		echo(json_encode("Ok"));
-        \maierlabs\lpfw\Logger::_("Remove file from archive:".$filename." Cam:".$camname,loggerLevel::info);
+        \maierlabs\lpfw\Logger::_("Remove file from archive:".$filename." Cam:".$camname,\maierlabs\lpfw\LoggerLevel::info);
     } else {
 		header("HTTP/1.0 400 Bad Request");
 		echo(json_encode("Error: file:".$filename." not found!"));
