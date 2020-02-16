@@ -7,6 +7,7 @@
 include_once 'config.php';
 include_once 'config.class.php';
 include_once 'cameraTools.php';
+include_once 'bifi.class.php';
 include_once Config::$lpfw.'logger.class.php';
 
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
