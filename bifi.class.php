@@ -144,7 +144,7 @@ class BiFi {
     public function getFromName($name) {
         $item = $this->getFileInfo("name",$name);
         $item =$item[$name];
-        if ($item===null)
+        if ($item===null || (int)$item["l"]==0)
             return null;
 
 
