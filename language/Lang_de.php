@@ -29,3 +29,4 @@ $TXT["geo data"]	= "Geo Informationen";
 $TXT["Country"]	= "Land";
 $TXT["Zipcode"]	= "PLZ";
 $TXT["City"]	= "Ort";
+$TXT["month"]	= "Monat";

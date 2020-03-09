@@ -15,7 +15,6 @@ use maierlabs\lpfw\Appl as Appl;
 \maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
 \maierlabs\lpfw\Logger::setLoggerLevel(\maierlabs\lpfw\LoggerLevel::info);
 
-
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
 if (isset($_GET["type"])) $camType = $_GET["type"]; else $camType="";
 if (isset($_GET['day']) && $_GET['day']!="" ) $day=new DateTime($_GET['day']); else $day=new DateTime();
@@ -39,8 +38,8 @@ if ($camName!="all") {
 
 if (isUserRoot()) $_SESSION["uRole"]='admin'; // need for the lpfw LeviPhpFrameWork
 
-$userRightText=(isUserRoot()?'R':'').(isUserView()?'W':'');
-\maierlabs\lpfw\Logger::_("View:".$day->format("Y.m.d")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRightText,\maierlabs\lpfw\LoggerLevel::info);
+$userRightTextForLogging=(isUserRoot()?'R':'').(isUserView()?'W':'');
+\maierlabs\lpfw\Logger::_("View:".$day->format("Y.m.d")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRightTextForLogging,\maierlabs\lpfw\LoggerLevel::info);
 
 //Testmail
 if ($action=="testmail" && isUserRoot()) {
@@ -78,125 +77,134 @@ if ($action=="reorganizeImages" && isUserRoot()) {
 if ($action=="deleteday" && isUserRoot()) {
     $systemMessage = deleteImagesFromDay($camType,$camName,$day);
 }
-
 ?>
+
 <html>
-<head>
-    <title>Webcam app by MaierLabs</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" ></script>
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="webcam.css">
-
-</head>
+    <head>
+        <title>Webcam app by MaierLabs</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" ></script>
+        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="webcam.css?vers=09.03.2020">
+    </head>
 <body>
-<div id="title"><?php echo Constants::TITLE?>
-    <div id="type">
-        <form>
-            <input type="hidden" name="day" value="<?php echo date_format($day, 'Y-n-j') ?>" />
-            <?php echo Appl::_("Cam")?>
-            <select id="camname" name="cam" onchange="submit()">
-                <option value="all" ><?php echo Appl::_("all")?></option>
-                <?php foreach (Constants::getCameras() as $camn=>$camPropertys) {
-                    if ($camPropertys["webcam"] || isUserView() || isUserRoot() || $camPropertys["webcam"]) {
-                        if ($camn == $camName) {
-                            echo('<option selected value="' . $camn . '">' . $camn . '</option>');
-                        } else {
-                            echo('<option value="' . $camn . '">' . $camn . '</option>');
+<div class="cam-left">
+    <div id="title"><?php echo Constants::TITLE?>
+        <div id="type">
+            <form>
+                <input type="hidden" name="day" value="<?php echo date_format($day, 'Y-n-j') ?>" />
+                <?php echo Appl::_("Cam")?>
+                <select id="camname" name="cam" onchange="submit()">
+                    <option value="all" ><?php echo Appl::_("all")?></option>
+                    <?php foreach (Constants::getCameras() as $camn=>$camPropertys) {
+                        if ($camPropertys["webcam"] || isUserView() || isUserRoot() || $camPropertys["webcam"]) {
+                            if ($camn == $camName) {
+                                echo('<option selected value="' . $camn . '">' . $camn . '</option>');
+                            } else {
+                                echo('<option value="' . $camn . '">' . $camn . '</option>');
+                            }
                         }
                     }
-                }
-                ?>
-            </select>
-            <span id="imagetype">
-				<?php if ((isset($camera["snap"]) || isset($camera["alert"])) && ""!=$camType) :?>
-                    <span><?php echo Appl::_("all")?>:</span>
-                    <span><input type="radio" name="type" value="" onclick="submit()"/></span>
-                <?php  endif; ?>
-                <?php if ((isset($camera["snap"]) || isset($camera["alert"])) && ""==$camType) :?>
-                    <span><?php echo Appl::_("all")?>:</span>
-                    <span><input type="radio" name="type" value="" checked onclick="submit()"/></span>
-                <?php  endif; ?>
-				<?php if (isset($camera["snap"]) && $camera["snap"]!=$camType) :?>
-                    <span><?php echo Appl::_("Snapshot")?>:</span>
-                    <span><input type="radio" name="type" value="<?php echo $camera["snap"]?>" onclick="submit()"/></span>
-                <?php  endif; ?>
-                <?php if (isset($camera["snap"]) && $camera["snap"]==$camType) :?>
-                    <span><?php echo Appl::_("Snapshot")?>:</span>
-                    <span><input type="radio" name="type" value="<?php echo $camera["snap"]?>" checked onclick="submit()"/></span>
-                <?php  endif; ?>
-                <?php if (isset($camera["alert"]) && $camera["alert"]!=$camType) :?>
-                    <span><?php echo Appl::_("Alert")?>:</span>
-                    <span><input type="radio" name="type" value="<?php echo $camera["alert"]?>"  onclick="submit()"/></span>
-                <?php  endif; ?>
-                <?php if (isset($camera["alert"]) && $camera["alert"]==$camType) :?>
-                    <span><?php echo Appl::_("Alert")?>:</span>
-                    <span><input type="radio" name="type" value="<?php echo $camera["alert"]?>"  checked onclick="submit()"/></span>
-                <?php  endif; ?>
-				</span>
-        </form>
+                    ?>
+                </select>
+                <span id="imagetype">
+                    <?php if ((isset($camera["snap"]) || isset($camera["alert"])) && ""!=$camType) :?>
+                        <br/><span><input type="radio" name="type" value="" onclick="submit()"/></span>
+                        <span><?php echo Appl::_("all")?></span>
+                    <?php  endif; ?>
+                    <?php if ((isset($camera["snap"]) || isset($camera["alert"])) && ""==$camType) :?>
+                        <br/><span><input type="radio" name="type" value="" checked onclick="submit()"/></span>
+                        <span><?php echo Appl::_("all")?></span>
+                    <?php  endif; ?>
+                    <?php if (isset($camera["snap"]) && $camera["snap"]!=$camType) :?>
+                        <br/><span><input type="radio" name="type" value="<?php echo $camera["snap"]?>" onclick="submit()"/></span>
+                        <span><?php echo Appl::_("Snapshot")?></span>
+                    <?php  endif; ?>
+                    <?php if (isset($camera["snap"]) && $camera["snap"]==$camType) :?>
+                        <br/><span><input type="radio" name="type" value="<?php echo $camera["snap"]?>" checked onclick="submit()"/></span>
+                        <span><?php echo Appl::_("Snapshot")?></span>
+                    <?php  endif; ?>
+                    <?php if (isset($camera["alert"]) && $camera["alert"]!=$camType) :?>
+                        <br/><span><input type="radio" name="type" value="<?php echo $camera["alert"]?>"  onclick="submit()"/></span>
+                        <span><?php echo Appl::_("Alert")?></span>
+                    <?php  endif; ?>
+                    <?php if (isset($camera["alert"]) && $camera["alert"]==$camType) :?>
+                        <br/><span><input type="radio" name="type" value="<?php echo $camera["alert"]?>"  checked onclick="submit()"/></span>
+                        <span><?php echo Appl::_("Alert")?></span>
+                    <?php  endif; ?>
+                    </span>
+            </form>
+        </div>
     </div>
-</div>
-<?php if ($systemMessage!="") :?>
-    <div id="systemMessage" style="background-color: lightgray;padding-bottom: 10px"><div style="background-color: #ffe030;padding: 5px;margin: 0px 10px 0px 10px;border-radius: 5px;">
-            <?php echo ($systemMessage);?>
-            <button style="height:23px;float: right" onclick="$('#systemMessage').hide('show');"><span class="glyphicon glyphicon-remove-circle" style="position: relative;top: -4px;"></span></button>
-        </div></div>
-<?php endif;?>
-<?php if ($camName!="all") {?>
-    <div class="calendarDiv">
-        <form style="display: inline-block;">
-            <input type="hidden" name="cam" value="<?php echo $camName ?>"/>
-            <input type="hidden" name="type" value="<?php echo $camType?>"/>
-            <button name="day" value="<?php echo $monthdec->format('Y-m-d')?>"> <span class="glyphicon glyphicon-backward"> </span></button>
-        </form>
-        <?php
-        require_once("calendar.class.php");
-        $cal = new calendar();
-        $calendarDate = clone ($day);
-        $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
-        for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
-            <div class="calendarBody">
-                <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day,Appl::__("TIMEZONE")); ?>
+    <div style="clear: both"></div>
+    <?php if ($systemMessage!="") {?>
+        <div id="systemMessage" style="background-color: lightgray;padding-bottom: 10px">
+            <div style="background-color: #ffe030;padding: 5px;margin: 0px 10px 0px 10px;border-radius: 5px;">
+                <?php echo ($systemMessage);?>
+                <button style="height:23px;float: right" onclick="$('#systemMessage').hide('show');"><span class="glyphicon glyphicon-remove-circle" style="position: relative;top: -4px;"></span></button>
             </div>
-            <?php $calendarDate->modify("1 month");  ?>
-        <?php }  ?>
-        <form style="display: inline-block;">
-            <input type="hidden" name="cam" value="<?php echo $camName ?>"/>
-            <input type="hidden" name="type" value="<?php echo $camType?>"/>
-            <button name="day" value="<?php echo $monthinc->format('Y-m-d')?>"> <span class="glyphicon glyphicon-forward"> </span></button>
-        </form>
-    </div>
-    <div class="toolbar">
-        <div style="display: inline-block;">
-            <button name="action" value="daybefore" onclick="dayBefore();"><span class="glyphicon glyphicon-backward"></span> <?php Appl::_("Day")?></button>
-            <button name="action" value="dayafter" onclick="dayAfter();"><?php Appl::_("Day")?> <span class="glyphicon glyphicon-forward"></span></button>
-            <button name="action" value="today" onclick="dayToday();"><?php Appl::_("Today")?></button>
         </div>
-        <div style="display: inline-block;">
-            <button name="action" value="next" onclick="imageOlder();"> <span class="glyphicon glyphicon-arrow-left"> </span> </button>
-            <button name="action" value="prev" onclick="imageNewer();"> <span class="glyphicon glyphicon-arrow-right"> </span> </button>
-            <button name="action" value="last" onclick="imageLast();"> <span class="glyphicon glyphicon-fast-forward"> </span> </button>
+    <?php }?>
+    <?php if ($camName!="all") {?>
+        <div class="calendarDiv">
+            <div>
+            <form style="display: inline-block;vertical-align: top; width: 50px;z-index: 10">
+                <input type="hidden" name="cam" value="<?php echo $camName ?>"/>
+                <input type="hidden" name="type" value="<?php echo $camType?>"/>
+                <button name="day" value="<?php echo $monthdec->format('Y-m-d')?>"> <span class="glyphicon glyphicon-backward"> </span> </button>
+            </form>
+                <span style="background-color: #f0f0f0;padding: 7px;margin: -21px;position: relative;top: 8px;z-index: 0;"><?php echo Appl::_("month")?></span>
+            <form style="display: inline-block;vertical-align: top;width: 50px;">
+                <input type="hidden" name="cam" value="<?php echo $camName ?>"/>
+                <input type="hidden" name="type" value="<?php echo $camType?>"/>
+                <button name="day" value="<?php echo $monthinc->format('Y-m-d')?>"> <span class="glyphicon glyphicon-forward"> </span> </button>
+            </form>
+            </div>
+            <div>
+                <?php
+                require_once("calendar.class.php");
+                $cal = new calendar();
+                $calendarDate = clone ($day);
+                $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
+                for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
+                    <div class="calendarBody">
+                        <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day,Appl::__("TIMEZONE")); ?>
+                    </div>
+                    <?php $calendarDate->modify("1 month");  ?>
+                <?php }  ?>
+            </div>
         </div>
-        &nbsp;&nbsp;&nbsp;&nbsp;
-        <span id="count" title="<?php Appl::_("The actual picture and the number of pictures")?>">0</span>
-        <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="<?php Appl::_("Deleted pictures in the archive")?>"></span>
-        <?php Appl::_("Date")?>:<span id="akt_date">...</span> <?php Appl::_("File")?>:<span id="akt_image">...</span>
+        <div class="toolbar">
+            <div style="display: inline-block;">
+                <button name="action" value="daybefore" onclick="dayBefore();"><span class="glyphicon glyphicon-backward"></span> <?php Appl::_("Day")?></button>
+                <button name="action" value="dayafter" onclick="dayAfter();"><?php Appl::_("Day")?> <span class="glyphicon glyphicon-forward"></span></button>
+                <button name="action" value="today" onclick="dayToday();"><?php Appl::_("Today")?></button>
+            </div>
+            <div style="display: inline-block;">
+                <button name="action" value="next" onclick="imageOlder();"> <span class="glyphicon glyphicon-arrow-left"> </span> </button>
+                <button name="action" value="prev" onclick="imageNewer();"> <span class="glyphicon glyphicon-arrow-right"> </span> </button>
+                <button name="action" value="last" onclick="imageLast();"> <span class="glyphicon glyphicon-fast-forward"> </span> </button>
+            </div>
+            <div style="margin:5px;">&nbsp;&nbsp;&nbsp;&nbsp;
+                <span id="count" title="<?php Appl::_("The actual picture and the number of pictures")?>">0</span>
+                <span id="countDeleted" style="background-color: red;border-radius: 14px;padding: 3px;" title="<?php Appl::_("Deleted pictures in the archive")?>"></span>
+                <?php Appl::_("Date")?>:<span id="akt_date">...</span> <?php Appl::_("File")?>:<span id="akt_image">...</span>
+            </div>
+        </div>
+    <?php } ?>
+</div>
+<div class="cam-right">
+    <div id="camimage">
+        <img id="image" src=""  title="" />
     </div>
-    <div id="clearboth"></div>
-<?php } ?>
-<div id="camimage">
-    <img id="image" src=""  title="" />
 </div>
 <div class="footer">
     <?php if ($camName!="all") {?>
-        <div id="slider"></div>
+        <div style="display: flow-root;padding-left: 10px;"><div id="slider"></div></div>
         <?php if(isUserView() || isUserRoot() || ($camName!="all") ) {?>
             <?php if (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"]) {?>
                 <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Create Video")?></button>
@@ -349,7 +357,7 @@ if ($action=="deleteday" && isUserRoot()) {
         });
     }
 
-    //delete day images
+    <?php //delete day images?>
     function deleteDay() {
         if (confirm("Please confirm, that you want to delete all images from the selected day?") ) {
             window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
@@ -368,7 +376,7 @@ if ($action=="deleteday" && isUserRoot()) {
         }
     }
 
-    //check if old images should be deleted
+    <?php //check if old images should be deleted?>
     function deleteOldImages() {
         $.ajax({
             url: "ajaxDeleteImagesOlderThen.php?day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
@@ -382,7 +390,7 @@ if ($action=="deleteday" && isUserRoot()) {
         });
     }
 
-    //calls ajax function to delete old pictures
+    <?php //calls ajax function to delete old pictures?>
     function deleteFiles() {
         $.ajax({
             url: "ajaxDeleteImagesOlderThen.php?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
@@ -395,8 +403,7 @@ if ($action=="deleteday" && isUserRoot()) {
     }
 <?php }?>
 
-
-    //Show images called by changing the camera or image type
+    <?php //Show images called by changing the camera or image type?>
     function showCamImages(camname) {
         if (camname==undefined) {
             camname=$("#camname").val();
@@ -411,7 +418,7 @@ if ($action=="deleteday" && isUserRoot()) {
         }
     }
 
-    //loads over ajax the list of images for the selected camera an type
+    <?php //loads over ajax the list of images for the selected camera an type?>
     function loadImageList(camname) {
         $("#akt_date").html(DateToString.dmy(date));
         $("#akt_image").html("");
@@ -477,7 +484,6 @@ if ($action=="deleteday" && isUserRoot()) {
             $("#image_"+cams[i]).remove();
         }
     }
-
 
     function dayBefore() {
         window.location.href="<?php echo ( $script.'?cam='.$camName.'&type='.$camType.'&day='.date_format($daydec, 'Y-n-j'))?>";
@@ -574,20 +580,9 @@ if ($action=="deleteday" && isUserRoot()) {
         }
         return s;
     }
-
-
 </script>
 
-
 <?php
-
-/**
- * Array of image occurences in one mounth
- * @param unknown $path
- * @param unknown $type
- * @param number $year
- * @param number $month
- */
 
 function getBookedDays($camName,$type,$year=0,$month=0){
 
@@ -606,14 +601,11 @@ function getBookedDays($camName,$type,$year=0,$month=0){
 
 /**
  * Count Images for one day
- * @param unknown $day
- * @param unknown $path
- * @param unknown $type
  * @return number
  */
-function getFileCount($camName,$startday,$type) {
+function getFileCount($camName,$date,$type) {
     $ret = array();
-    $dateSelectedMonth=$startday->format('Ym');
+    $dateSelectedMonth=$date->format('Ym');
     if (Constants::getCameras()[$camName]["zip"]) {
         $zip = new BiFi();
         for($day=1;$day<32;$day++) {
@@ -639,6 +631,3 @@ function getFileCount($camName,$startday,$type) {
     }
     return $ret;
 }
-
-
-?>
