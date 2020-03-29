@@ -48,6 +48,9 @@ if($camera==null || (!isUserRoot()  && !isUserView() && !$camera["webcam"])) {
         $fzip=$path."cam".date_format($day, 'Ymd').".zip";
         if ($zip->open($fzip)) {
 			$images_array = $zip->getArchiveFileCount($filter,true);
+			if (!is_array($images_array)) {
+                $images_array = array();
+            }
         }
         if ($zip->numFiles>0)
 	        sort($images_array);

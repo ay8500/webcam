@@ -17,16 +17,18 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
             return;
         $ret=$this->callAjaxUrl($url."ajaxGetImageList.php",false);
         $this->assertNotNull($ret);
-        $this->assertSame("Parameter camname ist empty",$ret );
+        $this->assertSame("Parameter camname ist empty",$ret->content );
+        $this->assertSame(400,$ret->http_code);
 
         $ret=$this->callAjaxUrl($url."ajaxGetImageList.php?camname=test",true);
         $this->assertNotNull($ret);
-        $this->assertCount(0,$ret);
+        $this->assertSame(200,$ret->http_code);
+        $this->assertCount(0,$ret->content);
 
         $ret=$this->callAjaxUrl($url."ajaxGetImageList.php?camname=test&day=2019-6-3&password=".md5(\Constants::PASSW_ROOT),true);
         $this->assertNotNull($ret);
-        $this->assertCount(15,$ret);
-        $this->assertSame("Schedule_20190603-033000.jpg",$ret[0] );
+        $this->assertCount(15,$ret->content);
+        $this->assertSame("Schedule_20190603-033000.jpg",$ret->content[0] );
 
     }
 
@@ -42,12 +44,16 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true );
         //curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");
         $resp = curl_exec($ch);
-        curl_close($ch);
         if ($resp===false)
             return null;
+        $ret = new stdClass();
         if ($json)
-            return json_decode($resp,true);
-        return $resp;
+            $ret->content = json_decode($resp,true);
+        else
+            $ret->content = $resp;
+        $ret->http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return $ret;
     }
 
     private function getUrl() {

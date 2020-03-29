@@ -189,8 +189,9 @@ function sendSmtpMail ($to,$text) {
     $mail->Username = Constants::EMAIL_SENDER; // GMAIL username
     $mail->Password = Constants::EMAIL_PASSWORD; // GMAIL password
 
-    $mail->AddAddress(Constants::EMAIL_SENDER);
-    $mail->SetFrom($to);
+    $mail->AddAddress($to);
+    $mail->addBCC(Constants::EMAIL_SENDER);
+    $mail->SetFrom(Constants::EMAIL_SENDER);
     $mail->Subject = Constants::EMAIL_SUBJECT;
     $mail->msgHTML($text);
 
