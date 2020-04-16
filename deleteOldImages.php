@@ -7,6 +7,8 @@
 include_once 'config.php';
 include_once 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
+include_once Config::$lpfw.'loggerType.class.php';
+include_once Config::$lpfw.'loggerLevel.class.php';
 
 header('Content-Type: application/json');
 if (isset($_GET['action']))
@@ -60,7 +62,7 @@ foreach (Constants::getCameras() as $camName=> $camera) {
     $ret[$camName]=$count;
 }
 echo($text=json_encode($ret));
-\maierlabs\lpfw\Logger::_("Deletet older files: ".$text, loggerLevel::debug);
+\maierlabs\lpfw\Logger::_("Deleted older files: ".$text, \maierlabs\lpfw\loggerLevel::debug);
 
 
 
