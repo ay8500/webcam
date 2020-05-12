@@ -42,7 +42,7 @@ function sendAlertMail($to,$camName,$pictureArray) {
     $body .="<p>Alert pictures from camera: ".$camName."</p>";
     $date = new DateTime();
     foreach ($pictureArray as $picture) {
-        $body .='<img src="'.Constants::IMAGE_URL().'/getZipCamImage.php?camname='.$camName.'&imagename='.basename($picture).'&date='.$date->format("Ymd").'"/>';
+        $body .='<img src="'.Constants::IMAGE_URL().'/getZipCamImage?camname='.$camName.'&imagename='.basename($picture).'&date='.$date->format("Ymd").'"/>';
     }
     $body  = "<body><html>".$body."</html></body>";
 

@@ -98,7 +98,7 @@ class calendar{
 	 */
 	private function displayDay($actday,$month,$year,$booktDays,$disabledDays,$selectedDay,$cam,$type) {
 		$scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
-		$script=$scriptArray[sizeof($scriptArray)-1];
+        $script=pathinfo($scriptArray[sizeof($scriptArray)-1],PATHINFO_FILENAME);
 		$today    = new DateTime();
 		
 		if (($actday == $today->format('d')) && ($today->format('n') == $month)) {

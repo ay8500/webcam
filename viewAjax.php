@@ -26,7 +26,8 @@ $monthdec=clone $day; $monthdec->modify('-1 month');
 $monthinc=clone $day; $monthinc->modify('+1 month');
 
 $scriptArray=explode("/",$_SERVER["SCRIPT_NAME"]);
-$script=$scriptArray[sizeof($scriptArray)-1];
+$script=pathinfo($scriptArray[sizeof($scriptArray)-1],PATHINFO_FILENAME);
+
 
 $systemMessage="";
 
@@ -318,7 +319,7 @@ if ($action=="deleteday" && isUserRoot()) {
             $("#count").html((aktualImageIdx+1)+"/"+imageList.length);
             $("#slider").slider( "option", "value", aktualImageIdx );
             <?php if (Constants::getCameras()[$camName]["zip"]) { ?>
-                src="getZipCamImage.php?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx];
+                src="getZipCamImage?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx];
             <?php } else {?>
                 src = imageList[aktualImageIdx];
             <?php } ?>
@@ -333,7 +334,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
 <?php if (isUserRoot()) {?>
     function showLogs() {
-        window.location.href="<?php echo ( 'viewLogs.php?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
+        window.location.href="<?php echo ( 'viewLogs?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
     }
 <?php }?>
 
@@ -342,9 +343,9 @@ if ($action=="deleteday" && isUserRoot()) {
     function deleteImage() {
         $.ajax({
             <?php if ($camera["zip"]) {?>
-            url: "ajaxDeleteZipImage.php?day=<?php echo $day->format("Ymd");?>&camname=<?php echo $camName;?>&filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+            url: "ajaxDeleteZipImage?day=<?php echo $day->format("Ymd");?>&camname=<?php echo $camName;?>&filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
             <?php } else {?>
-            url: "ajaxDeleteImage.php?filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
+            url: "ajaxDeleteImage?filename="+imageList[aktualImageIdx]+"&password="+Cookie("password"),
             <?php } ?>
             success:function(data){
                 imageList.splice(aktualImageIdx, 1);
@@ -379,7 +380,7 @@ if ($action=="deleteday" && isUserRoot()) {
     <?php //check if old images should be deleted?>
     function deleteOldImages() {
         $.ajax({
-            url: "ajaxDeleteImagesOlderThen.php?day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
+            url: "ajaxDeleteImagesOlderThen?day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
             success:function(data){
                 if (data.files>0) {
                     if (confirm("Confirm "+data.files+" files to be deleted")) {
@@ -393,7 +394,7 @@ if ($action=="deleteday" && isUserRoot()) {
     <?php //calls ajax function to delete old pictures?>
     function deleteFiles() {
         $.ajax({
-            url: "ajaxDeleteImagesOlderThen.php?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
+            url: "ajaxDeleteImagesOlderThen?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
             success:function(data){
                 if (confirm(data.files+" files deleted, do you want to refresch the site?")) {
                     location.reload();
@@ -428,7 +429,7 @@ if ($action=="deleteday" && isUserRoot()) {
         if(type==null)
             type="";
         $.ajax({
-            url: "ajaxGetImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname,
+            url: "ajaxGetImageList?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname,
             success:function(data){
                 imageList=data.reverse();
                 if (imageList.length>0) {
@@ -438,7 +439,7 @@ if ($action=="deleteday" && isUserRoot()) {
             }
         })
         $.ajax({
-            url: "ajaxGetImageList.php?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname+"&deleted=ask",
+            url: "ajaxGetImageList?day="+DateToString.ymd(date)+"&type="+type+"&camname="+camname+"&deleted=ask",
             success:function(data){
                 if (data>0) {
                     $("#countDeleted").show().html(data);
@@ -451,7 +452,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function showAllLastImages() {
         $.ajax({
-            url: "ajaxGetAllNewestImages.php",
+            url: "ajaxGetAllNewestImages",
             success:function(data){
                 var cams= new Array;
                 var zipped= new Array;
@@ -461,10 +462,11 @@ if ($action=="deleteday" && isUserRoot()) {
                 $("#image").css("display","none");
                 for (var i=0; i<cams.length; i++) {
                     if( data[cams[i]].name!=null) {
-                        $("#image_"+cams[i]).remove();
-                        $( "#image" ).after( '<a href="<?php "./".$_SERVER["SCRIPT_NAME"]?>?cam='+cams[i]+'" title="'+cams[i]+'"><img class="allimages" id="image_'+cams[i]+'" ></a>' );
+                        $("#aimage_"+cams[i]).remove();
+                        $( "#image" ).after( '<a id="aimage_'+cams[i]+'" href="<?php echo $script?>?cam='+cams[i]+'" title="'+cams[i]+'"><img class="allimages" id="image_'+cams[i]+'"></a>' );
                         if (zipped[i]) {
-                            $("#image_"+cams[i]).attr("src","getZipCamImage.php?camname="+cams[i]+"&date="+data[cams[i]]["date"]+"&imagename="+data[cams[i]]["name"]);
+                            $("#image_"+cams[i]).attr("src","getZipCamImage" +
+                                "?camname="+cams[i]+"&date="+data[cams[i]]["date"]+"&imagename="+data[cams[i]]["name"]);
                         } else {
                             $("#image_"+cams[i]).attr("src",data[cams[i]]["name"]);
                         }

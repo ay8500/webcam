@@ -169,7 +169,7 @@ if ($action=="deleteday" && isUserRoot()) {
     function loadLogList() {
         $("#akt_date").html(DateToString.dmy(date));
         $.ajax({
-            url: "ajaxGetLogList.php?day="+DateToString.ymd(date),
+            url: "ajaxGetLogList?day="+DateToString.ymd(date),
             success:function(data){
                 fillHitList(data);
             }
@@ -194,12 +194,12 @@ if ($action=="deleteday" && isUserRoot()) {
     }
 
     function showImages() {
-        window.location.href="<?php echo ( 'viewAjax.php?cam='.$camName.'&type=&day='.date_format($day, 'Y-n-j'))?>";
+        window.location.href="<?php echo ( 'viewAjax?cam='.$camName.'&type=&day='.date_format($day, 'Y-n-j'))?>";
     }
 
     function showip(ip) {
         $.ajax({
-            url: "ajaxGetIpInfo.php?ip="+ip
+            url: "ajaxGetIpInfo?ip="+ip
         }).success(function(data) {
             $(".modal-title").html("<?php Appl::_("IP address")?>:"+ip+"<?php Appl::_("geo data")?>");
             var text = "<?php Appl::_("Country")?>:"+data.country+"<br/>";
