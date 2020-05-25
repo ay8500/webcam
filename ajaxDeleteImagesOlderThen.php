@@ -3,7 +3,7 @@
  * This script will delete older pictures than the day parameter from the archive or filesystem
  * Vers: 1.2.0
  */
-include 'config.php';
+include 'config.class.php';
 
 header('Content-Type: application/json');
 
@@ -22,13 +22,13 @@ if (isset($_GET['cam']) && $_GET['cam']!="" )
 else
 	die("cam parameter is missing");
 
-if (isset(Constants::getCameras()[$camName]))
-	$camera = Constants::getCameras()[$camName];
+if (isset(Config::ja()["cameras"][$camName]))
+	$camera = Config::ja()["cameras"][$camName];
 else
 	die("camera propertys not set");
 
 $count=0;
-$path =Constants::IMAGE_ROOT_PATH.$camera["path"];
+$path =Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
 $directory = dir($path);
 while ($file = $directory->read()) {
 	if($camera["zip"]) {

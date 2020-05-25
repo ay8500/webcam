@@ -1,5 +1,4 @@
 <?PHP
-include 'config.php';
 include 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
 include_once Config::$lpfw.'appl.class.php';
@@ -18,13 +17,13 @@ $dateEarlier = clone ($day); $dateEarlier->modify("-1 month");
 $dateLater = clone ($day); $dateLater->modify("1 month");
 
 $systemMessage="";
-\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Config::jc()->IMAGE_ROOT_PATH.'log');
 
 
-if ($action=="deleteday" && isUserRoot()) {
+if ($action=="deleteday" && Config::isUserRoot()) {
     $count=0;$countAll=0;
-    $f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
-    $w = fopen (Constants::IMAGE_ROOT_PATH.'new.log', "w");
+    $f = fopen (Config::jc()->IMAGE_ROOT_PATH.'log', "r");
+    $w = fopen (Config::jc()->IMAGE_ROOT_PATH.'new.log', "w");
     while ($line= fgets ($f)) {
         $rr=explode("\t", $line,5);
         $time=substr($rr[0],0,10);
@@ -38,25 +37,25 @@ if ($action=="deleteday" && isUserRoot()) {
     }
     fclose($f);
     fclose($w);
-    if (unlink(Constants::IMAGE_ROOT_PATH.'log'))
-        rename(Constants::IMAGE_ROOT_PATH.'new.log',Constants::IMAGE_ROOT_PATH.'log');
+    if (unlink(Config::jc()->IMAGE_ROOT_PATH.'log'))
+        rename(Config::jc()->IMAGE_ROOT_PATH.'new.log',Config::jc()->IMAGE_ROOT_PATH.'log');
 
     $systemMessage="Entries deleted:".$count. " Lines remained:".$countAll;
     maierlabs\lpfw\Logger::_("deleteLog Date:".$day->format("Ymd")." Count:".$count,maierlabs\lpfw\LoggerLevel::debug);
-} else {
-    $countInfo = 0;
-    $countDebug = 0;
-    $countError = 0;
-    $f = fopen(Constants::IMAGE_ROOT_PATH . 'log', "r");
-    while ($line = fgets($f)) {
-        $rr = explode("\t", $line, 5);
-        if ($rr[1] == maierlabs\lpfw\LoggerLevel::info) $countInfo++;
-        elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::debug) $countDebug++;
-        elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::error) $countError++;
-    }
-    fclose($f);
-    $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$countError;
 }
+
+$countInfo = 0;
+$countDebug = 0;
+$countError = 0;
+$f = fopen(Config::jc()->IMAGE_ROOT_PATH . 'log', "r");
+while ($line = fgets($f)) {
+    $rr = explode("\t", $line, 5);
+    if ($rr[1] == maierlabs\lpfw\LoggerLevel::info) $countInfo++;
+    elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::debug) $countDebug++;
+    elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::error) $countError++;
+}
+fclose($f);
+$systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$countError;
 
 ?>
 <html>
@@ -73,7 +72,7 @@ if ($action=="deleteday" && isUserRoot()) {
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body style="font-family: Arial;">
-<div id="title"><?php echo Constants::TITLE?> logs</div>
+<div id="title"><?php echo Config::jc()->TITLE?> logs</div>
 <?php if ($systemMessage!="") :?>
     <div id="systemMessage" style="background-color: lightgray;padding-bottom: 10px"><div style="background-color: #ffe030;padding: 5px;margin: 0px 10px 0px 10px;border-radius: 5px;">
         <?php echo ($systemMessage);?>
@@ -86,34 +85,50 @@ if ($action=="deleteday" && isUserRoot()) {
     require_once("calendar.class.php");
     $cal = new calendar();
     $calendarDate = clone ($day);
-    $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
-    for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {
+    $calendarDate =$calendarDate ->modify(Config::jc()->CALENDAR_MIN_DISPLAY." month");
+    for ($i=-3;$i<=0;$i++) {
         ?>
         <div class="calendarBody">
-            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),"",$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n")),array(),$day,Appl::__("TIMEZONE")); ?>
+            <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),getParam("type"),$camName,getBookedDays($calendarDate->format("Y"),$calendarDate->format("n"),getParam("type")),array(),$day,Appl::__("TIMEZONE")); ?>
         </div>
     <?php $calendarDate->modify("1 month"); } ?>
     <form style="display: inline-block;"><button name="day" value="<?php echo $dateLater->format('Y-m-d')?>"><span class="glyphicon glyphicon-forward"> </span></button></form>
 </div>
 <div class="toolbar" id="tollbartop">
-    <?php if (isUserRoot()):?>
+    <?php if (Config::isUserRoot()):?>
         <button name="action" value="deleteday" onclick="deleteDay();" title="<?php Appl::_("Attention: all logs for the actual day will be deleted!")?>">
             <?php Appl::_("Delete logs for this day")?>
         </button>
+        <span id="count" title="Log entrys">0</span>
+        <select id="paramtype" onchange="logFilter();" style="padding: 8px; border-radius: 10px;">
+            <option <?php echo getParam("type","all")=="all"?"selected":""?> value="all">All</option>
+            <option <?php echo getParam("type")==""?"selected":""?> value="">Anonimous</option>
+            <option <?php echo getParam("type")=="W"?"selected":""?> value="W">Viewer</option>
+            <option <?php echo getParam("type")=="R"?"selected":""?> value="R">Root</option>
+        </select>
     <?php endif;?>
-    <span id="count" title="Log entrys">0</span>
 </div>
 <div id="clearboth"></div>
 <div class="toolbar" >
-    <table id="logs">
-        <tr><td><?php Appl::_("No log entrys for this day.")?></td></tr>
+    <table  class="table table-hover">
+        <thead class="thead-light">
+        <tr >
+            <th><?php Appl::_("Date")?></th>
+            <th><?php Appl::_("Type")?></th>
+            <th><?php Appl::_("Ip")?></th>
+            <th><?php Appl::_("Link")?></th>
+            <th><?php Appl::_("View date")?></th>
+            <th><?php Appl::_("Type")?></th>
+            <th><?php Appl::_("Cam")?></th>
+            <th><?php Appl::_("User")?></th>
+        </tr>
+        </thead>
+        <?php echoLogsForDate($day,getParam("type"));?>
     </table>
 </div>
 <div class="footer" id="tollbarfooter">
     <button onclick="showImages()"><?php Appl::_("Show Images")?></button>
-
-
-    <?php if (isUserRoot() || isUserView()) {?>
+    <?php if (Config::isUserRoot() || Config::isUserView()) {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
     <?php } else {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
@@ -149,48 +164,18 @@ if ($action=="deleteday" && isUserRoot()) {
 
 
 <script>
-    var date = new Date(<?php echo date_format($day, 'Y') ?>,<?php echo date_format($day, 'n') ?>-1,<?php echo date_format($day, 'j') ?>);
-    var imageList = new Array;
-
     $( document ).ready(function() {
-        loadLogList();
         setTimeout(function(){ $("#systemMessage").hide("slow"); }, 10000);
     });
 
-
-    //delete day images
     function deleteDay() {
         if (confirm("Please confirm, thas you want to delete all logs from the selected day?") ) {
-            window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type=&day='.date_format($day, 'Y-n-j'))?>";
+            window.location.href="<?php echo ( $script.'?action=deleteday&cam='.$camName.'&type='.getParam("type").'&day='.date_format($day, 'Y-n-j'))?>";
         }
     }
 
-    //loads over ajax the list of logs for the selected date
-    function loadLogList() {
-        $("#akt_date").html(DateToString.dmy(date));
-        $.ajax({
-            url: "ajaxGetLogList?day="+DateToString.ymd(date),
-            success:function(data){
-                fillHitList(data);
-            }
-        })
-    }
-
-    function fillHitList(data){
-        var table=document.getElementById("logs");
-        if (data["0"]!=null) {
-            while(table.tBodies[0].rows.length>0) {table.tBodies[0].deleteRow(0);}
-            for(var i=0; i<data.length; i++) {
-                var j = 0;
-                var row=table.tBodies[0].insertRow(table.tBodies[0].rows.length);
-                if (i%2==0) row.className="trx"; else row.className="try";
-
-                var cell1=row.insertCell(j++); cell1.innerHTML=data[i].date;
-                var cell2=row.insertCell(j++); cell2.innerHTML='<a href="javascript:showip(\''+data[i].ip+'\')">'+data[i].ip+'</a>';
-                var cell3=row.insertCell(j++); cell3.innerHTML=data[i].text;
-            }
-            $("#count").html(data.length);
-        }
+    function logFilter() {
+        window.location.href="<?php echo ( $script.'?action=view&cam='.$camName.'&day='.date_format($day, 'Y-n-j'))?>"+"&type="+$("#paramtype").val();
     }
 
     function showImages() {
@@ -204,19 +189,18 @@ if ($action=="deleteday" && isUserRoot()) {
             $(".modal-title").html("<?php Appl::_("IP address")?>:"+ip+"<?php Appl::_("geo data")?>");
             var text = "<?php Appl::_("Country")?>:"+data.country+"<br/>";
             text +="<?php Appl::_("Zipcode")?>:"+data.zip+"<br/>";
-            text +="<?php Appl::_("City")?>:"+data.city;
+            text +="<?php Appl::_("City")?>:"+data.city+"<br/>";
+            text += "<?php Appl::_("Country")?>:"+data.x.country_name+"<br/>";
+            text +="<?php Appl::_("Zipcode")?>:"+data.x.zip+"<br/>";
+            text +="<?php Appl::_("City")?>:"+data.x.city+"<br/>";
+            text += "<img src=\""+data.x.location.country_flag+"\" style=\"height:35px\" /><br/>";
+            text += "ISP:"+data.isp+"<br/>";
+            text += "ORG:"+data.org+"<br/>";
+            text += "AS:"+data.as+"<br/>";
             $(".modal-body").html(text);
             $('#myModal').modal({show: 'false' });
         });
     }
-
-        function getTime(s) {
-            k=s.split("-");
-            if (k.length==2) {
-                return k[1].substr(0,2)+":"+k[1].substr(2,2)+":"+k[1].substr(4,2);
-            }
-            else return s;
-        }
 
         var DateToString = {
             ymd: function (d) {
@@ -276,20 +260,18 @@ if ($action=="deleteday" && isUserRoot()) {
                 return s;
             }
         }
-
-
     </script>
 
 
     <?php
-
     /**
-     * Array of log occurences in one mounth
-     * @param number $year
-     * @param number $month
+     * @param int $year
+     * @param int $month
+     * @param string $user
+     * @return array Array of log occurences in one mounth
+     * @throws Exception
      */
-
-    function getBookedDays($year=0,$month=0){
+    function getBookedDays($year=0,$month=0,$type=""){
 
         if ($year == 0) {
             $referenceDay    = new DateTime(date("Y")."-".date("n")."-1");
@@ -303,17 +285,17 @@ if ($action=="deleteday" && isUserRoot()) {
 
         $ret = array();
 
-        $f = fopen (Constants::IMAGE_ROOT_PATH.'log', "r");
+        $f = fopen (Config::jc()->IMAGE_ROOT_PATH.'log', "r");
         $ln= 0;
         while ($line= fgets ($f)) {
             ++$ln;
-            $rr=explode("\t", $line,4);
+            $rr=explode("\t", $line);
             $time=substr($rr[0],0,7);
             $akttime=$referenceDay->format('Y-m');
-            if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info) {
+            if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info && ((isset($rr[8]) && $rr[8]=="User:".$type) || $type=="all")) {
                 $time=substr($rr[0],0,10);
                 for ($i=1;$i<10;$i++) {
-                    if ($time==$akttime.'-0'.$i )
+                    if ($time==$akttime.'-0'.$i  )
                         if (isset($ret[$i])) $ret[$i] +=1;	else $ret[$i] =1;
                 }
                 for ($i=10;$i<32;$i++) {
@@ -324,7 +306,27 @@ if ($action=="deleteday" && isUserRoot()) {
             }
         }
         fclose ($f);
-
         return $ret;
+    }
+
+    function echoLogsForDate($day,$type) {
+        if(Config::isUserRoot()) {
+            $f = fopen (Config::jc()->IMAGE_ROOT_PATH.'log', "r");
+            $ln= 0;
+            while ($line= fgets ($f)) {
+                ++$ln;
+                $rr=explode("\t", $line);
+                $time=substr($rr[0],0,10);
+                $akttime=$day->format('Y-m-d');
+                if($akttime==$time && $rr[1]==maierlabs\lpfw\LoggerLevel::info && ((isset($rr[8]) && $rr[8]=="User:".$type) || $type=="all")) {
+                    echo('<tr><td>'.$rr[0].'</td><td>'.$rr[1].'</td><td><a href="javascript:showip(\''.$rr[2].'\')">'.$rr[2].'</a></td>');
+                    echo('<td>'.$rr[3].'</td><td>'.$rr[5].'</td><td>'.$rr[6].'</td>');
+                    if (sizeof($rr)>=8) {
+                        echo('<td>' . $rr[7] . '</td><td>' . $rr[8] . '</td></tr>');
+                    }
+                }
+            }
+            fclose ($f);
+        }
     }
 ?>

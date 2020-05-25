@@ -4,7 +4,7 @@
  * Vers: 1.2.0
  */
 
-include 'config.php';
+include 'config.class.php';
 include_once 'bifi.class.php';
 
 if (isset($_GET['camname']))
@@ -29,9 +29,9 @@ else {
     die;
 }
 
-$camera = Constants::getCameras()[$camname];
+$camera = Config::ja()["cameras"][$camname];
 $imgPath=$camera["path"];
-$path =Constants::IMAGE_ROOT_PATH.$imgPath;
+$path =Config::jc()->IMAGE_ROOT_PATH.$imgPath;
 $fzip=$path."cam".$imagedate.".zip";
 $zip = new BiFi();
 if ($zip->open($fzip)) {

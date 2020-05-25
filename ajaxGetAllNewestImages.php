@@ -3,7 +3,7 @@
  * This script will return the latest picture from each camera
  * Vers: 1.2.0
  */
-include 'config.php';
+include 'config.class.php';
 include_once 'bifi.class.php';
 include_once 'cameraTools.php';
 
@@ -12,12 +12,12 @@ header('Content-Type: application/json');
 $images_array= array();
 $filter="";
 
-foreach (Constants::getCameras() as $camName=> $camera) {
-    $path = Constants::IMAGE_ROOT_PATH.$camera["path"];
+foreach (Config::ja()["cameras"] as $camName=> $camera) {
+    $path = Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
     $latest_ctime = 1;
     $latest_filename = '';
     $akttime="";
-    if (isUserRoot() || isUserView() || $camera["webcam"]  ) {
+    if (Config::isUserRoot() || Config::isUserView() || $camera["webcam"]  ) {
         if ($camera["zip"]) {
             $directory = dir($path);
             while ($file = $directory->read()) {
@@ -46,12 +46,12 @@ foreach (Constants::getCameras() as $camName=> $camera) {
             $directory->close();
 
         } else {
-            $path = Constants::IMAGE_ROOT_PATH.$camera["path"];
+            $path = Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
             $files = getFileList($path,$camera["patternRegEx"]);
             foreach ($files as $f) {
                 if (($filter=="" || strstr($f["name"],$filter)) && intval($f["lastmod"]) > $latest_ctime) {
                     $latest_ctime = intval($f["lastmod"]);
-                    $latest_filename = str_replace(Constants::IMAGE_ROOT_PATH.$camera["path"],'',$f["name"]);
+                    $latest_filename = str_replace(Config::jc()->IMAGE_ROOT_PATH.$camera["path"],'',$f["name"]);
                 }
             }
             if ($latest_filename!="") {

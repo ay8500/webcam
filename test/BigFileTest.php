@@ -2,7 +2,6 @@
 
 include_once __DIR__ . "/../config.class.php";
 include_once Config::$lpfw."/logger.class.php";
-include_once __DIR__ . "/../config.php";
 include_once __DIR__ . "/../bifi.class.php";
 
 use \maierlabs\lpfw\MySqlDbAUH as MySqlDbAUH;
@@ -21,7 +20,7 @@ class BigFileTest extends \PHPUnit_Framework_TestCase
 
     public function testOpenBigfile()
     {
-        $path = Constants::IMAGE_ROOT_PATH . Constants::getCameras()["test"]["path"];
+        $path = Config::jc()->IMAGE_ROOT_PATH . Config::ja()["cameras"]["test"]["path"];
         $day = new DateTime("2019-6-3");
         $zip = new BiFi();
         $fzip = $path ."cam". date_format($day, 'Ymd') . ".zip";

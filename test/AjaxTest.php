@@ -1,6 +1,6 @@
 <?php
 
-include_once __DIR__ . "/../../webcam/config.php";
+include_once __DIR__ . "/../../webcam/config.class.php";
 include_once __DIR__ . "/../../lpfw/logger.class.php";
 
 class AjaxTest extends \PHPUnit_Framework_TestCase
@@ -25,7 +25,7 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(200,$ret->http_code);
         $this->assertCount(0,$ret->content);
 
-        $ret=$this->callAjaxUrl($url."ajaxGetImageList?camname=test&day=2019-6-3&password=".md5(\Constants::PASSW_ROOT),true);
+        $ret=$this->callAjaxUrl($url."ajaxGetImageList?camname=test&day=2019-6-3&password=".md5(\Config::jc()->PASSW_ROOT),true);
         $this->assertNotNull($ret);
         $this->assertCount(15,$ret->content);
         $this->assertSame("Schedule_20190603-033000.jpg",$ret->content[0] );

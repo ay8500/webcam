@@ -35,8 +35,8 @@
 			"alertEmail": "code@blue-l.de"
 		},
 		"testflat": {
-			"path": "test/jpg/",
-			"patternRegEx": ".*\\\\.jpg|.*\\\\.JPG",
+			"path": "test\\jpg\\",
+			"patternRegEx": ".*[.]jpg|.*[.]JPG",
 			"zip": false,
 			"webcam": true,
 			"slides": true
@@ -57,6 +57,12 @@
 			"password": "e011d51843fe95fa05af3cdeb1ded601"
 		}
 	},
+	"TITLE":"Webcam by Levi",
+	"EMAIL_SENDER":"xxxxx@yyyyy.de",
+	"EMAIL_PASSWORD":"xxxxx",
+	"EMAIL_HOST":"smtp.yyyyy.de",
+	"EMAIL_PORT":"587",
+	"EMAIL_SUBJECT":"Webcam alert",
 	"MAX_COUNT_TO_ZIP":"10",
 	"IMAGE_ROOT_PATH":"c:\\xampp\\htdocs\\webcam\\",
 	"IMAGE_URL":"/webcam",

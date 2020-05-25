@@ -4,15 +4,14 @@
 * the main function is zipImages from the php file  comeraTools.php
 * Version: 1.2.0
  */
-include_once 'config.php';
 include_once 'config.class.php';
 include_once 'cameraTools.php';
 include_once 'bifi.class.php';
 include_once Config::$lpfw.'logger.class.php';
 
-\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'zip.log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Config::jc()->IMAGE_ROOT_PATH.'zip.log');
 
-foreach (Constants::getCameras() as $camName=> $camera) {
+foreach (Config::ja()["cameras"] as $camName=> $camera) {
     if($camera["zip"]) {
         $ret = zipImages($camName,true,false);
         if (isset($camera["alertEmail"]) && count($ret->sendMail)>0) {
@@ -38,11 +37,11 @@ foreach (Constants::getCameras() as $camName=> $camera) {
  * @return boolean
  */
 function sendAlertMail($to,$camName,$pictureArray) {
-    $body = "<h2>".Constants::TITLE."</h2>";
+    $body = "<h2>".Config::jc()->TITLE."</h2>";
     $body .="<p>Alert pictures from camera: ".$camName."</p>";
     $date = new DateTime();
     foreach ($pictureArray as $picture) {
-        $body .='<img src="'.Constants::IMAGE_URL().'/getZipCamImage?camname='.$camName.'&imagename='.basename($picture).'&date='.$date->format("Ymd").'"/>';
+        $body .='<img src="'.Config::jc()->IMAGE_URL.'/getZipCamImage?camname='.$camName.'&imagename='.basename($picture).'&date='.$date->format("Ymd").'"/>';
     }
     $body  = "<body><html>".$body."</html></body>";
 

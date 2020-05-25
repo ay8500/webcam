@@ -3,7 +3,7 @@
  * This script will return the list of pictures for a camera from the same day and type
  * Vers: 1.2.0
  */
-include 'config.php';
+include 'config.class.php';
 include_once 'bifi.class.php';
 include_once 'cameraTools.php';
 
@@ -35,15 +35,15 @@ if (isset($_GET['deleted']) && $_GET['deleted']!="" )
 else
     $deleted=false;
 
-$camera = isset(Constants::getCameras()[$camname])?Constants::getCameras()[$camname]:null;
+$camera = isset(Config::ja()["cameras"][$camname])?Config::ja()["cameras"][$camname]:null;
 $images_array= array();
-if($camera==null || (!isUserRoot()  && !isUserView() && !$camera["webcam"])) {
+if($camera==null || (!Config::isUserRoot()  && !Config::isUserView() && !$camera["webcam"])) {
     echo(json_encode($images_array));
     die();
 } else {
     $filter=$type;
     if ($camera["zip"]) {
-        $path=Constants::IMAGE_ROOT_PATH.$camera["path"];
+        $path=Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
         $zip = new BiFi();
         $fzip=$path."cam".date_format($day, 'Ymd').".zip";
         if ($zip->open($fzip)) {
@@ -55,12 +55,12 @@ if($camera==null || (!isUserRoot()  && !isUserView() && !$camera["webcam"])) {
         if ($zip->numFiles>0)
 	        sort($images_array);
     } else {
-        $path=Constants::IMAGE_ROOT_PATH.$camera["path"];
-        $files = getFileList($path,Constants::getCameras()[$camname]["patternRegEx"]);
+        $path=Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
+        $files = getFileList($path,Config::ja()["cameras"][$camname]["patternRegEx"]);
         foreach ($files as $file) {
             if (($filter=="" || strstr($file,$filter)) &&
                 $day->format("Ymd")==(new DateTime())->setTimestamp($file["lastmod"] )->format("Ymd"))
-                $images_array[]=Constants::getCameras()[$camname]["path"].str_replace($path,"",$file["name"]);
+                $images_array[]=Config::ja()["cameras"][$camname]["path"].str_replace($path,"",$file["name"]);
         }
 	    rsort($images_array);
     }

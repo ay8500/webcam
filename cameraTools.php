@@ -4,7 +4,6 @@
  * Vers. 1.2.0
  **/
 include_once 'config.class.php';
-include_once 'config.php';
 include_once Config::$lpfw.'logger.class.php';
 include_once 'phpmailer/PHPMailer.php';
 include_once 'phpmailer/SMTP.php';
@@ -64,8 +63,8 @@ function getFileList($dir, $regex, $maxFiles = 3000, $level = 0)
 function deleteImagesFromDay($camType, $camName, $day)
 {
     $fileDeletedCount = 0;
-    $camera=Constants::getCameras()[$camName];
-    $path = Constants::IMAGE_ROOT_PATH . $camera["path"];
+    $camera=Config::ja()["cameras"][$camName];
+    $path = Config::jc()->IMAGE_ROOT_PATH . $camera["path"];
     if ($camera["zip"]) {
         $fileName = $path . "cam" . $day->format('Ymd') . ".zip";
         $fileDeletedCount += unlink($fileName . ".bfi")?1:0;
@@ -87,7 +86,7 @@ function deleteImagesFromDay($camType, $camName, $day)
  * Zip images in the archive file per day
  * Vers. 1.2.0
  * Only a defined number of images will be zipped at once! Call the funtion severel times to zip all images.
- * The count of max image are define in config.php Constants::MAX_COUNT_TO_ZIP
+ * The count of max image are define in config.json Config::jc()->MAX_COUNT_TO_ZIP
  * @param string $camName
  * @param boolean $simulate if you oly want to simulate no archiving
  * @param boolean $delete in a file is successfully archived the oroginal file will be deleted
@@ -95,10 +94,10 @@ function deleteImagesFromDay($camType, $camName, $day)
 function zipImages($camName,$delete=true,$simulate=true) {
     $fileZipped=0;$daysZipped=0;
 
-    $camera=Constants::getCameras()[$camName];
+    $camera=Config::ja()["cameras"][$camName];
     if ($camera["zip"]) {
-        $path = Constants::IMAGE_ROOT_PATH . $camera["path"];
-        $files = getFileList($path,$camera["patternRegEx"],Constants::MAX_COUNT_TO_ZIP);
+        $path = Config::jc()->IMAGE_ROOT_PATH . $camera["path"];
+        $files = getFileList($path,$camera["patternRegEx"],Config::jc()->MAX_COUNT_TO_ZIP);
 
         array_multisort(array_column($files,'lastmod'),SORT_ASC,$files);
         $deletefiles = array();
@@ -184,15 +183,15 @@ function sendSmtpMail ($to,$text) {
     $mail->ContentType = $mail::CONTENT_TYPE_TEXT_HTML;
     $mail->SMTPAuth = true; // enable SMTP authentication
     $mail->SMTPSecure = $mail::ENCRYPTION_STARTTLS; // sets the prefix to the servier
-    $mail->Host = Constants::EMAIL_HOST; // sets GMAIL as the SMTP server
-    $mail->Port = Constants::EMAIL_PORT; // set the SMTP port for the GMAIL server
-    $mail->Username = Constants::EMAIL_SENDER; // GMAIL username
-    $mail->Password = Constants::EMAIL_PASSWORD; // GMAIL password
+    $mail->Host = Config::jc()->EMAIL_HOST; // sets GMAIL as the SMTP server
+    $mail->Port = Config::jc()->EMAIL_PORT; // set the SMTP port for the GMAIL server
+    $mail->Username = Config::jc()->EMAIL_SENDER; // GMAIL username
+    $mail->Password = Config::jc()->EMAIL_PASSWORD; // GMAIL password
 
     $mail->AddAddress($to);
-    $mail->addBCC(Constants::EMAIL_SENDER);
-    $mail->SetFrom(Constants::EMAIL_SENDER);
-    $mail->Subject = Constants::EMAIL_SUBJECT;
+    $mail->addBCC(Config::jc()->EMAIL_SENDER);
+    $mail->SetFrom(Config::jc()->EMAIL_SENDER);
+    $mail->Subject = Config::jc()->EMAIL_SUBJECT;
     $mail->msgHTML($text);
 
     try{

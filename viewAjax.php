@@ -3,7 +3,6 @@
  * Webcam by Maierlabs (c) 2016-2020
  * Vers: 1.2.0
  */
-include 'config.php';
 include_once 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
 include_once Config::$lpfw.'appl.class.php';
@@ -12,7 +11,7 @@ include_once 'cameraTools.php';
 
 use maierlabs\lpfw\Appl as Appl;
 
-\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Config::jc()->IMAGE_ROOT_PATH.'log');
 \maierlabs\lpfw\Logger::setLoggerLevel(\maierlabs\lpfw\LoggerLevel::info);
 
 if (isset($_GET["cam"])) $camName = $_GET["cam"]; else	$camName="all";
@@ -32,18 +31,18 @@ $script=pathinfo($scriptArray[sizeof($scriptArray)-1],PATHINFO_FILENAME);
 $systemMessage="";
 
 if ($camName!="all") {
-    $camera = Constants::getCameras()[$camName];
+    $camera = Config::ja()["cameras"][$camName];
     if (!isset($camera["snap"]) && !isset($camera["alert"]))
         $camType="";
 }
 
-if (isUserRoot()) $_SESSION["uRole"]='admin'; // need for the lpfw LeviPhpFrameWork
+if (Config::isUserRoot()) $_SESSION["uRole"]='admin'; // need for the lpfw LeviPhpFrameWork
 
-$userRightTextForLogging=(isUserRoot()?'R':'').(isUserView()?'W':'');
+$userRightTextForLogging=(Config::isUserRoot()?'R':'').(Config::isUserView()?'W':'');
 \maierlabs\lpfw\Logger::_("View:".$day->format("Y.m.d")."\tType:".$camType."\tCam:".$camName."\tUser:".$userRightTextForLogging,\maierlabs\lpfw\LoggerLevel::info);
 
 //Testmail
-if ($action=="testmail" && isUserRoot()) {
+if ($action=="testmail" && Config::isUserRoot()) {
     $text = "<html><body><h2>Testmail</h2>Date:".date("l Y.F.d h:i:s");
     $text .= "<p>Disk free space:".number_format(disk_free_space('./')/1024/1024,2,',','.')." Mbyte</p>";
     $text .= "</body></html>";
@@ -52,17 +51,17 @@ if ($action=="testmail" && isUserRoot()) {
 }
 
 //Zip the files in one zipfile per day
-if ($action=="zipImages" && isUserRoot()) {
+if ($action=="zipImages" && Config::isUserRoot()) {
     error_reporting(E_ALL);
     $zip=zipImages($camName,true,false);
     $systemMessage="Files zipped date:".$day->format("Ymd")." files:".$zip->filesZipped." deleted:".$zip->deleted." days:".$zip->daysZipped;
     \maierlabs\lpfw\Logger::_($systemMessage,\maierlabs\lpfw\LoggerLevel::info);
 }
 
-if ($action=="reorganizeImages" && isUserRoot()) {
+if ($action=="reorganizeImages" && Config::isUserRoot()) {
     $zip= new BiFi();
     //Server path
-    $fileName=Constants::IMAGE_ROOT_PATH.$camera["path"]."cam".$day->format('Ymd').".zip";
+    $fileName=Config::jc()->IMAGE_ROOT_PATH.$camera["path"]."cam".$day->format('Ymd').".zip";
     $zip->open($fileName);
     $ret=$zip->reorganize(false);
     if($ret!==false) {
@@ -75,7 +74,7 @@ if ($action=="reorganizeImages" && isUserRoot()) {
     }
 }
 
-if ($action=="deleteday" && isUserRoot()) {
+if ($action=="deleteday" && Config::isUserRoot()) {
     $systemMessage = deleteImagesFromDay($camType,$camName,$day);
 }
 ?>
@@ -94,15 +93,15 @@ if ($action=="deleteday" && isUserRoot()) {
     </head>
 <body>
 <div class="cam-left">
-    <div id="title"><?php echo Constants::TITLE?>
+    <div id="title"><?php echo Config::jc()->TITLE?>
         <div id="type">
             <form>
                 <input type="hidden" name="day" value="<?php echo date_format($day, 'Y-n-j') ?>" />
                 <?php echo Appl::_("Cam")?>
                 <select id="camname" name="cam" onchange="submit()">
                     <option value="all" ><?php echo Appl::_("all")?></option>
-                    <?php foreach (Constants::getCameras() as $camn=>$camPropertys) {
-                        if ($camPropertys["webcam"] || isUserView() || isUserRoot() || $camPropertys["webcam"]) {
+                    <?php foreach (Config::ja()["cameras"] as $camn=>$camPropertys) {
+                        if ($camPropertys["webcam"] || Config::isUserView() || Config::isUserRoot() || $camPropertys["webcam"]) {
                             if ($camn == $camName) {
                                 echo('<option selected value="' . $camn . '">' . $camn . '</option>');
                             } else {
@@ -170,8 +169,8 @@ if ($action=="deleteday" && isUserRoot()) {
                 require_once("calendar.class.php");
                 $cal = new calendar();
                 $calendarDate = clone ($day);
-                $calendarDate =$calendarDate ->modify(Constants::CALENDAR_MIN_DISPLAY." month");
-                for ($i=Constants::CALENDAR_MIN_DISPLAY;$i<=Constants::CALENDAR_MAX_DISPLAY;$i++) {?>
+                $calendarDate =$calendarDate ->modify(Config::jc()->CALENDAR_MIN_DISPLAY." month");
+                for ($i=Config::jc()->CALENDAR_MIN_DISPLAY;$i<=Config::jc()->CALENDAR_MAX_DISPLAY;$i++) {?>
                     <div class="calendarBody">
                         <?php $cal->showCalendar($calendarDate->format("Y"),$calendarDate->format("n"),$camType,$camName,getBookedDays($camName,$camType,$calendarDate->format("Y"),$calendarDate->format("n")),array(),$day,Appl::__("TIMEZONE")); ?>
                     </div>
@@ -206,13 +205,13 @@ if ($action=="deleteday" && isUserRoot()) {
 <div class="footer">
     <?php if ($camName!="all") {?>
         <div style="display: flow-root;padding-left: 10px;"><div id="slider"></div></div>
-        <?php if(isUserView() || isUserRoot() || ($camName!="all") ) {?>
-            <?php if (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"]) {?>
-                <button id="animate" onclick="createVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Create Video")?></button>
-                <button id="video" onclick="showVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Show Video")?></button>
+        <?php if(Config::isUserView() || Config::isUserRoot() || ($camName!="all") ) {?>
+            <?php if (!isset(Config::ja()["cameras"][$camName]["slides"])  || !Config::ja()["cameras"][$camName]["slides"]) {?>
+                <button id="animate" onclick="$.ajax({url: 'ajaxLogger?text=createVideo'});createVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Create Video")?></button>
+                <button id="video" onclick="$.ajax({url: 'ajaxLogger?text=showVideo'});showVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Show Video")?></button>
             <?php }?>
-            <?php if (isUserRoot()):?>
-                <?php if (isset(Constants::getCameras()[$camName]) && Constants::getCameras()[$camName]["zip"]) {?>
+            <?php if (Config::isUserRoot()):?>
+                <?php if (isset(Config::ja()["cameras"][$camName]) && Config::ja()["cameras"][$camName]["zip"]) {?>
                      <button name="action" value="reorganizeImages" onclick="reorganizeImages();" title="Attention: all pictures will be reorganized!"><span class="glyphicon glyphicon-retweet"></span> Reorganize</button>
                      <button name="action" value="zipImages" onclick="zipImages();" title="Attention: all pictures will be zipped!"><span class="glyphicon glyphicon-compressed"></span> Zip images</button>
                 <?php } ?>
@@ -224,10 +223,10 @@ if ($action=="deleteday" && isUserRoot()) {
         <?php }?>
        <button onclick="showCamImages()"><span class="glyphicon glyphicon-refresh"></span> <?php Appl::_("Refresh pictures")?></button>
     <?php }?>
-    <?php if (isUserRoot()) {?>
+    <?php if (Config::isUserRoot()) {?>
         <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> <?php Appl::_("Show logs")?></button>
     <?php }?>
-    <?php if (isUserRoot() || isUserView()) {?>
+    <?php if (Config::isUserRoot() || Config::isUserView()) {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
     <?php } else {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
@@ -265,7 +264,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     });
 
-<?php if ($camName!="all" && (!isset(Constants::getCameras()[$camName]["slides"])  || !Constants::getCameras()[$camName]["slides"])  ) {?>
+<?php if ($camName!="all" && (!isset(Config::ja()["cameras"][$camName]["slides"])  || !Config::ja()["cameras"][$camName]["slides"])  ) {?>
     var animateBegin = -2;
     var animateEnd = -2;
     var animateTimer = null;
@@ -282,7 +281,7 @@ if ($action=="deleteday" && isUserRoot()) {
             animateEnd=$( "#slider" ).slider("option","max");
             if (animateEnd-animateBegin>250)
                 animateEnd = animateBegin+250;
-            createVideo();
+            createVideo(true);
         } else {
             if (animateBegin >= 0 && animateEnd >= 0 && animateBegin <= animateEnd) {
                 aktualImageIdx = animateEnd--;
@@ -318,7 +317,7 @@ if ($action=="deleteday" && isUserRoot()) {
             $("#akt_image").html(getTime(imageList[aktualImageIdx]));
             $("#count").html((aktualImageIdx+1)+"/"+imageList.length);
             $("#slider").slider( "option", "value", aktualImageIdx );
-            <?php if (Constants::getCameras()[$camName]["zip"]) { ?>
+            <?php if (Config::ja()["cameras"][$camName]["zip"]) { ?>
                 src="getZipCamImage?camname=<?php echo $camName;?>&date=<?php echo $day->format("Ymd")?>&imagename="+imageList[aktualImageIdx];
             <?php } else {?>
                 src = imageList[aktualImageIdx];
@@ -332,13 +331,13 @@ if ($action=="deleteday" && isUserRoot()) {
 
 <?php }?>
 
-<?php if (isUserRoot()) {?>
+<?php if (Config::isUserRoot()) {?>
     function showLogs() {
         window.location.href="<?php echo ( 'viewLogs?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
     }
 <?php }?>
 
-<?php if (isUserRoot() && $camName!="all") {?>
+<?php if (Config::isUserRoot() && $camName!="all") {?>
 
     function deleteImage() {
         $.ajax({
@@ -393,6 +392,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     <?php //calls ajax function to delete old pictures?>
     function deleteFiles() {
+        $.ajax({url: "ajaxLogger?text=action_delete+day_<?php echo $day->format('Y-m-d') ?>+cam_<?php echo $camName ?>"});
         $.ajax({
             url: "ajaxDeleteImagesOlderThen?action=delete&day=<?php echo $day->format('Y-m-d') ?>&cam=<?php echo $camName ?>",
             success:function(data){
@@ -456,7 +456,7 @@ if ($action=="deleteday" && isUserRoot()) {
             success:function(data){
                 var cams= new Array;
                 var zipped= new Array;
-                <?php foreach (Constants::getCameras() as $cn=>$camPropertys) {?>
+                <?php foreach (Config::ja()["cameras"] as $cn=>$camPropertys) {?>
                     cams.push('<?php echo $cn ?>');zipped.push(<?php echo $camPropertys["zip"]?"true":"false" ?>);
                 <?php  } ?>
                 $("#image").css("display","none");
@@ -478,7 +478,7 @@ if ($action=="deleteday" && isUserRoot()) {
 
     function hideAllLastImages() {
         var cams= new Array;
-        <?php foreach (Constants::getCameras() as $cn=>$camera) {?>
+        <?php foreach (Config::ja()["cameras"] as $cn=>$camera) {?>
         cams.push('<?php echo $cn ?>');
         <?php } ?>
         $("#image").css("display","inline");
@@ -608,17 +608,17 @@ function getBookedDays($camName,$type,$year=0,$month=0){
 function getFileCount($camName,$date,$type) {
     $ret = array();
     $dateSelectedMonth=$date->format('Ym');
-    if (Constants::getCameras()[$camName]["zip"]) {
+    if (Config::ja()["cameras"][$camName]["zip"]) {
         $zip = new BiFi();
         for($day=1;$day<32;$day++) {
-            $fzip=Constants::IMAGE_ROOT_PATH.Constants::getCameras()["$camName"]["path"]."cam".$dateSelectedMonth.($day<10?"0".$day:$day).".zip";
+            $fzip=Config::jc()->IMAGE_ROOT_PATH.Config::ja()["cameras"][$camName]["path"]."cam".$dateSelectedMonth.($day<10?"0".$day:$day).".zip";
             $zip->open($fzip);
             $c=$zip->getArchiveFileCount($type);
             if ($c>0) $ret[$day]=$c;
         }
     } else {
-        $path = Constants::getCameras()[$camName]["path"];
-        $files=getFileList($path,Constants::getCameras()[$camName]["patternRegEx"]);
+        $path = Config::ja()["cameras"][$camName]["path"];
+        $files=getFileList($path,Config::ja()["cameras"][$camName]["patternRegEx"]);
         foreach ($files as $f) {
             $d =(new DateTime())->setTimestamp($f["lastmod"] );
             if (($type=="" || strstr($f["name"],$type)) &&

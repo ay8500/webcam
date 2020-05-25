@@ -4,13 +4,13 @@
  * Vers: 1.2.0
  */
 
-include 'config.php';
+include 'config.class.php';
 include_once 'bifi.class.php';
 
 
 if (isset($_GET['camname'])) {
     $camname=$_GET['camname'];
-    if (!isset(Constants::getCameras()[$camname]) || !Constants::getCameras()[$camname]["webcam"]) {
+    if (!isset(Config::ja()["cameras"][$camname]) || !CConfig::ja()["cameras"][$camname]["webcam"]) {
         header("HTTP/1.0 400 Bad Request");
         echo("Cam not allowed as webcam!");
         die();
@@ -23,13 +23,13 @@ if (isset($_GET['camname'])) {
 
 $filter=".";
 
-$imgPath=Constants::getCameras()[$camname]["path"];
+$imgPath=Config::ja()["cameras"][$camname]["path"];
 
-$path =Constants::IMAGE_ROOT_PATH.$imgPath;
+$path =Config::jc()->IMAGE_ROOT_PATH.$imgPath;
 $directory = dir($path);
 $latest_ctime = 0;
 $latest_filename = '';
-if(Constants::getCameras()[$camname]["zip"]) {
+if(Config::ja()["cameras"][$camname]["zip"]) {
     while ($file = $directory->read()) {
         if (strtolower(substr($file, -4))===".bfi" && intval(filectime($path.$file)) >= intval($latest_ctime)) {
             $latest_ctime = intval(filectime($path.$file));
@@ -53,7 +53,7 @@ if(Constants::getCameras()[$camname]["zip"]) {
 } else {
     while ($file = $directory->read()) {
         if (in_array(strtolower(substr($file, -4)), array(".jpg", ".gif", ".png")) && strstr($file, $filter)) {
-            $akt_time = intval(filemtime(Constants::IMAGE_ROOT_PATH . Constants::getCameras()[$camname]["path"] . $file));
+            $akt_time = intval(filemtime(Config::jc()->IMAGE_ROOT_PATH .Config::ja()["cameras"][$camname]["path"] . $file));
             if ($akt_time > $latest_ctime) {
                 $latest_ctime = $akt_time;
                 $latest_filename = $file;
@@ -61,7 +61,7 @@ if(Constants::getCameras()[$camname]["zip"]) {
         }
     }
     if ($latest_filename != "") {
-        $im = imagecreatefromjpeg(Constants::IMAGE_ROOT_PATH . Constants::getCameras()[$camname]["path"] . $latest_filename);
+        $im = imagecreatefromjpeg(Config::jc()->IMAGE_ROOT_PATH . Config::ja()["cameras"][$camname]["path"] . $latest_filename);
         //if ($im) {
         Header("Content-type: image/jpg");
         ImageJpeg($im);

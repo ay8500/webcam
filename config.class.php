@@ -21,6 +21,7 @@ class Config {
     public static $webAppVersion = "20200202";  //Used to load the actual css und js files.
     public static $SupportedLang = array("de"); //First language ist the default language.
     public static $lpfw = __DIR__. '/../lpfw/';
+    public static $json =null;
 
     /**
      * Get Database propertys host, database, user, password
@@ -29,18 +30,39 @@ class Config {
     public static function getDatabasePropertys()
     {
         $ret = new stdClass();
-        if (!isLocalhost()) {
-            $ret->host='';
-            $ret->database='';
-            $ret->user='';
-            $ret->password='';
-        } else {
-            $ret->host='';
-            $ret->database='';
-            $ret->user='';
-            $ret->password='';
-        }
+        $ret->host='';
+        $ret->database='';
+        $ret->user='';
+        $ret->password='';
         return $ret;
     }
+
+    static function loadConfigJson() {
+        if (self::$json==null) {
+            self::$json=file_get_contents("config.json");
+            $j = json_decode(self::$json);
+            $j->IMAGE_URL = "http://" . $_SERVER["SERVER_NAME"] . $j->IMAGE_URL;
+            self::$json = json_encode($j);
+        }
+    }
+
+    public static function jc() {
+        self::loadConfigJson();
+        return json_decode(self::$json);
+    }
+
+    public static function ja() {
+        self::loadConfigJson();
+        return json_decode(self::$json,true);
+    }
+
+    public static function isUserRoot() {
+        return isset($_COOKIE["password"]) && ($_COOKIE["password"]==self::jc()->user->root->password || md5($_COOKIE["password"])==self::jc()->user->root->password);
+    }
+
+    public static function isUserView() {
+        return isset($_COOKIE["password"]) && ($_COOKIE["password"]==self::jc()->user->view->password || md5($_COOKIE["password"])==self::jc()->user->view->password);
+    }
+
 }
 ?>

@@ -1,10 +1,9 @@
 <?php
 /**
  * This script delete old images or archives from file system
- * The affected images are older then Constants::BATCH_DELETE_OLDER_THAN_DAYS
+ * The affected images are older then Config::jc()->BATCH_DELETE_OLDER_THAN_DAYS
  * Vers. 1.2.0
 */
-include_once 'config.php';
 include_once 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
 include_once Config::$lpfw.'loggerType.class.php';
@@ -16,16 +15,16 @@ if (isset($_GET['action']))
 else
     $action="";
 
-\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'delete.log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Config::jc()->IMAGE_ROOT_PATH.'delete.log');
 $day=new DateTime();
-$day->modify('-'.Constants::BATCH_DELETE_OLDER_THAN_DAYS.' day');
+$day->modify('-'.Config::jc()->BATCH_DELETE_OLDER_THAN_DAYS.' day');
 
 $ret = array();
 $ret["action"]=$action;
 
-foreach (Constants::getCameras() as $camName=> $camera) {
+foreach (CConfig::ja()["cameras"] as $camName=> $camera) {
     $count=0;
-    $path =Constants::IMAGE_ROOT_PATH.$camera["path"];
+    $path =Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
     $directory = dir($path);
     while ($file = $directory->read()) {
         if($camera["zip"]) {

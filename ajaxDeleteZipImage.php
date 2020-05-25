@@ -4,7 +4,7 @@
  * Vers: 1.2.0
  */
 
-include 'config.php';
+include 'config.class.php';
 include_once 'bifi.class.php';
 include __DIR__.'/../lpfw/logger.class.php';
 
@@ -37,13 +37,13 @@ else {
 	die("Password required");
 }
 
-if (!isUserRoot()) {
+if (!Config::isUserRoot()) {
 	header("HTTP/1.0 400 Bad Request");
 	die ("Wrong Password");
 }
-\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Constants::IMAGE_ROOT_PATH.'log');
+\maierlabs\lpfw\Logger::setLoggerType(\maierlabs\lpfw\LoggerType::file, Config::jc()->IMAGE_ROOT_PATH.'log');
 
-$path=Constants::IMAGE_ROOT_PATH.Constants::getCameras()[$camname]["path"];
+$path=Config::jc()->IMAGE_ROOT_PATH.Config::ja()["cameras"][$camname]["path"];
 
 $zip = new BiFi();
 $fzip=$path."cam".date_format($day, 'Ymd').".zip";
