@@ -1,12 +1,12 @@
 <?PHP
 /**
  * Webcam by Maierlabs (c) 2016-2020
- * Vers: 1.2.0
+ * Vers: 1.3.0
  */
 include_once 'config.class.php';
-include_once Config::$lpfw.'logger.class.php';
-include_once Config::$lpfw.'appl.class.php';
-include_once 'bifi.class.php';
+include_once Config::$lpfw.'logger.class.php';      //Logger class from Levi's PHP FrameWork lpfw
+include_once Config::$lpfw.'appl.class.php';        //Application class from Levi's PHP FrameWork lpfw
+include_once 'bifi.class.php';                      //Big File class
 include_once 'cameraTools.php';
 
 use maierlabs\lpfw\Appl as Appl;
@@ -208,8 +208,12 @@ if ($action=="deleteday" && Config::isUserRoot()) {
         <div style="display: flow-root;padding-left: 10px;"><div id="slider"></div></div>
         <?php if(Config::isUserView() || Config::isUserRoot() || ($camName!="all") ) {?>
             <?php if (!isset(Config::ja()["cameras"][$camName]["slides"])  || !Config::ja()["cameras"][$camName]["slides"]) {?>
-                <button id="animate" onclick="$.ajax({url: 'ajaxLogger?text=createVideo'});createVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Create Video")?></button>
-                <button id="video" onclick="$.ajax({url: 'ajaxLogger?text=showVideo'});showVideo(); "><span class="glyphicon glyphicon-film"></span> <?php Appl::_("Show Video")?></button>
+                <button id="animate" onclick="$.ajax({url: 'ajaxLogger?text=CreateVideo&cam=<?php echo $camName?>'});createVideo(); ">
+                    <span class="glyphicon glyphicon-film"></span> <?php Appl::_("Create Video")?>
+                </button>
+                <button id="video" onclick="$.ajax({url: 'ajaxLogger?text=ShowVideo&cam=<?php echo $camName?>'});showVideo(); ">
+                    <span class="glyphicon glyphicon-film"></span> <?php Appl::_("Show Video")?>
+                </button>
             <?php }?>
             <?php if (Config::isUserRoot()):?>
                 <?php if (isset(Config::ja()["cameras"][$camName]) && Config::ja()["cameras"][$camName]["zip"]) {?>
@@ -224,12 +228,10 @@ if ($action=="deleteday" && Config::isUserRoot()) {
         <?php }?>
        <button onclick="showCamImages()"><span class="glyphicon glyphicon-refresh"></span> <?php Appl::_("Refresh pictures")?></button>
     <?php }?>
-    <?php if (Config::isUserRoot()) {?>
-        <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> <?php Appl::_("Show logs")?></button>
-    <?php }?>
     <?php if (Config::isUserRoot() || Config::isUserView()) {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
         <button onclick="$('#settings_div').slideDown('slow');"><span class="glyphicon glyphicon-cog"></span> <?php Appl::_("Settings")?></button>
+        <button onclick="showLogs()"><span class="glyphicon glyphicon-list-alt"></span> <?php Appl::_("Show logs")?></button>
     <?php } else {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
     <?php }?>
@@ -331,7 +333,7 @@ if ($action=="deleteday" && Config::isUserRoot()) {
 
 <?php }?>
 
-<?php if (Config::isUserRoot()) {?>
+<?php if (Config::isUserRoot() || Config::isUserView() ){?>
     function showLogs() {
         window.location.href="<?php echo ( 'viewLogs?cam='.$camName.'&type='.$camType.'&day='.date_format($day, 'Y-n-j'))?>";
     }

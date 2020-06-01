@@ -1,7 +1,7 @@
 <?php
 include 'config.class.php';
-include_once Config::$lpfw.'logger.class.php';
-include_once Config::$lpfw.'appl.class.php';
+include_once Config::$lpfw.'logger.class.php';      //Logger class from Levi's PHP FrameWork lpfw
+include_once Config::$lpfw.'appl.class.php';        //Application class from Levi's PHP FrameWork lpfw
 
 use \maierlabs\lpfw\Appl as Appl;
 
@@ -44,23 +44,23 @@ if ($action=="deleteday" && Config::isUserRoot()) {
     maierlabs\lpfw\Logger::_("deleteLog Date:".$day->format("Ymd")." Count:".$count,maierlabs\lpfw\LoggerLevel::debug);
 }
 
-$countInfo = 0;
-$countDebug = 0;
-$countError = 0;
-$f = fopen(Config::jc()->IMAGE_ROOT_PATH . 'log', "r");
-while ($line = fgets($f)) {
-    $rr = explode("\t", $line, 5);
-    if ($rr[1] == maierlabs\lpfw\LoggerLevel::info) $countInfo++;
-    elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::debug) $countDebug++;
-    elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::error) $countError++;
+if (Config::isUserRoot()) {
+    $countInfo = 0; $countDebug = 0; $countError = 0;
+    $f = fopen(Config::jc()->IMAGE_ROOT_PATH . 'log', "r");
+    while ($line = fgets($f)) {
+        $rr = explode("\t", $line, 5);
+        if ($rr[1] == maierlabs\lpfw\LoggerLevel::info) $countInfo++;
+        elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::debug) $countDebug++;
+        elseif ($rr[1] == maierlabs\lpfw\LoggerLevel::error) $countError++;
+    }
+    fclose($f);
+    $systemMessage = "Entries info:" . $countInfo . " debug:" . $countDebug . " error:" . $countError;
 }
-fclose($f);
-$systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$countError;
 
 ?>
 <html>
 <head>
-    <title>Webcam Viewer by Levi</title>
+    <title>Webcam Viewer by MaierLabs</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="webcam.css">
@@ -114,10 +114,11 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
     <table  class="table table-hover">
         <thead class="thead-light">
         <tr >
-            <th><?php Appl::_("Date")?></th>
-            <th><?php Appl::_("Type")?></th>
             <th><?php Appl::_("Ip")?></th>
-            <th><?php Appl::_("Link")?></th>
+            <?php if(Config::isUserRoot()) {?>
+                <th><?php Appl::_("Type")?></th>
+                <th><?php Appl::_("Link")?></th>
+            <?php }?>
             <th><?php Appl::_("View date")?></th>
             <th><?php Appl::_("Type")?></th>
             <th><?php Appl::_("Cam")?></th>
@@ -237,7 +238,12 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
             $rr=explode("\t", $line);
             $time=substr($rr[0],0,7);
             $akttime=$referenceDay->format('Y-m');
-            if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info && ((isset($rr[8]) && $rr[8]=="User:".$type) || $type=="all")) {
+            if($akttime==$time && $rr[1]==\maierlabs\lpfw\LoggerLevel::info &&
+                (
+                    (Config::isUserRoot() && ((isset($rr[8]) && $rr[8]=="User:".$type) || $type=="all"))) ||
+                    (Config::isUserView() && (isset($rr[8]) && ($rr[8]=="User:W" || $rr[8]=="User:")))
+                )
+            {
                 $time=substr($rr[0],0,10);
                 for ($i=1;$i<10;$i++) {
                     if ($time==$akttime.'-0'.$i  )
@@ -255,7 +261,7 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
     }
 
     function echoLogsForDate($day,$type) {
-        if(Config::isUserRoot()) {
+        if(Config::isUserRoot() | Config::isUserView()) {
             $f = fopen (Config::jc()->IMAGE_ROOT_PATH.'log', "r");
             $ln= 0;
             while ($line= fgets ($f)) {
@@ -263,11 +269,22 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
                 $rr=explode("\t", $line);
                 $time=substr($rr[0],0,10);
                 $akttime=$day->format('Y-m-d');
-                if($akttime==$time && $rr[1]==maierlabs\lpfw\LoggerLevel::info && ((isset($rr[8]) && $rr[8]=="User:".$type) || $type=="all")) {
-                    echo('<tr><td>'.$rr[0].'</td><td>'.$rr[1].'</td><td><a href="javascript:showip(\''.$rr[2].'\')">'.$rr[2].'</a></td>');
-                    echo('<td>'.$rr[3].'</td><td>'.$rr[5].'</td><td>'.$rr[6].'</td>');
-                    if (sizeof($rr)>=8) {
-                        echo('<td>' . $rr[7] . '</td><td>' . $rr[8] . '</td></tr>');
+                if(Config::isUserRoot()) {
+                    if ($akttime == $time && $rr[1] == maierlabs\lpfw\LoggerLevel::info && ((isset($rr[8]) && $rr[8] == "User:" . $type) || $type == "all")) {
+                        echo('<tr><td><a href="javascript:showip(\'' . $rr[2] . '\')">' . $rr[2] . '</a></td>');
+                        echo('<td>' . $rr[1] . '</td><td>' . $rr[3] . '</td><td>' . $rr[5] . '</td><td>' . $rr[6] . '</td>');
+                        if (sizeof($rr) >= 8) {
+                            echo('<td>' . $rr[7] . '</td><td>' . $rr[8] . '</td></tr>');
+                        }
+                    }
+                }
+                if(Config::isUserView()) {
+                    if ($akttime == $time && $rr[1] == maierlabs\lpfw\LoggerLevel::info && (isset($rr[8]) && ($rr[8]=="User:W" || $rr[8]=="User:" ))) {
+                        echo('<tr><td><a href="javascript:showip(\'' . $rr[2] . '\')">' . $rr[2] . '</a></td>');
+                        echo('<td>' . $rr[5] . '</td><td>' . $rr[6] . '</td>');
+                        if (sizeof($rr) >= 8) {
+                            echo('<td>' . $rr[7] . '</td><td>' . $rr[8] . '</td></tr>');
+                        }
                     }
                 }
             }

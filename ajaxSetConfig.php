@@ -31,12 +31,17 @@ if (!Config::isUserView() && !Config::isUserRoot()) {
 $json = new stdClass();
 $json->cameras =$cameras; $json->newpassword=$newpassword;
 $json->root = Config::isUserRoot();$json->view=Config::isUserView();
+
+$user ="";
+if (Config::isUserRoot()) $user="R";
+if (Config::isUserView()) $user="W";
+
 if (Config::saveConfigJson($cameras,$newpassword)) {
     header("HTTP/1.0 200 OK");
-    \maierlabs\lpfw\Logger::_("Save settings:" . json_encode($json), \maierlabs\lpfw\LoggerLevel::info);
+    \maierlabs\lpfw\Logger::_("Save settings\tType\tCam\tUser:".$user , \maierlabs\lpfw\LoggerLevel::info);
     echo(json_encode($json));
 } else {
-    \maierlabs\lpfw\Logger::_("Save settings:" . json_encode($json), \maierlabs\lpfw\LoggerLevel::error);
+    \maierlabs\lpfw\Logger::_("Save settings\tType\tCam\tUser:".$user , \maierlabs\lpfw\LoggerLevel::error);
     header("HTTP/1.0 400 Bad Request");
     echo("Error saving settings");
 }

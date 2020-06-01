@@ -12,7 +12,7 @@
         },
         "Kamera2": {
             "path": "cam/FI9900P_C4D655408C9F/",
-            "patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
+            "patternRegEx": "(Schedule_)[0-9\\-]{15}\\.jpg|(MDAlarm_)[0-9\\-]{15}\\.jpg",
             "zip": true,
             "webcam": false,
             "snap": "Schedule_",
@@ -22,7 +22,7 @@
         },
         "Thalmannsfeld": {
             "path": "cam/FI9805W_00626E646465/",
-            "patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
+            "patternRegEx": "(Schedule_)[0-9\\-]{15}\\.jpg|(MDAlarm_)[0-9\\-]{15}\\.jpg",
             "zip": true,
             "webcam": true,
             "snap": "Schedule_",
@@ -49,7 +49,7 @@
         },
         "Kamera1": {
             "path": "cam/FI9900P_00626E66039D/",
-            "patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
+            "patternRegEx": "(Schedule_)[0-9\\-]{15}\\.jpg|(MDAlarm_)[0-9\\-]{15}\\.jpg",
             "zip": true,
             "webcam": false,
             "snap": "Schedule_",
@@ -80,6 +80,6 @@
     "CALENDAR_MIN_DISPLAY": -1,
     "CALENDAR_MAX_DISPLAY": 0,
     "BATCH_DELETE_OLDER_THAN_DAYS": 30000,
-    "changeDate": "2020.06.01 01:19:38",
+    "changeDate": "2020.06.01 13:59:28",
     "changeIP": "::1"
 }

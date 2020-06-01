@@ -15,8 +15,9 @@ foreach (Config::ja()["cameras"] as $camName=> $camera) {
     if($camera["zip"]) {
         $ret = zipImages($camName,true,false);
         $mailSentResult="";
-        if (isset($camera["alertEmail"]) && count($ret->sendMail)>0) {
-            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail,isset($camera["alertBccEmail"])?$camera["alertBccEmail"]:null);
+        if (isset($camera["alertEmail"]) && $camera["alertEmail"]!="" && count($ret->sendMail)>0) {
+            $toCC=(isset($camera["alertBccEmail"]) && $camera["alertBccEmail"]!="")?$camera["alertBccEmail"]:null;
+            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail,$toCC);
             $mailSentResult=$mailsSent?"ok":"error";
         }
         $text = $camName . '=>  to be Zipped:' . $ret->tobeZipped ;
