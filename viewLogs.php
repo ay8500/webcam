@@ -1,4 +1,4 @@
-<?PHP
+<?php
 include 'config.class.php';
 include_once Config::$lpfw.'logger.class.php';
 include_once Config::$lpfw.'appl.class.php';
@@ -79,6 +79,7 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
             <button style="height:23px;float: right" onclick="$('#systemMessage').hide('show');"><span class="glyphicon glyphicon-remove-circle" style="position: relative;top: -4px;"></span></button>
     </div></div>
 <?php endif;?>
+<div class="resultDBoperation"></div>
 <div class="calendarDiv">
     <form style="display: inline-block;"><button name="day" value="<?php echo $dateEarlier->format('Y-m-d')?>"><span class="glyphicon glyphicon-backward"> </span></button></form>
     <?php
@@ -101,10 +102,10 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
         </button>
         <span id="count" title="Log entrys">0</span>
         <select id="paramtype" onchange="logFilter();" style="padding: 8px; border-radius: 10px;">
-            <option <?php echo getParam("type","all")=="all"?"selected":""?> value="all">All</option>
-            <option <?php echo getParam("type")==""?"selected":""?> value="">Anonimous</option>
-            <option <?php echo getParam("type")=="W"?"selected":""?> value="W">Viewer</option>
-            <option <?php echo getParam("type")=="R"?"selected":""?> value="R">Root</option>
+            <option <?php echo getParam("type","all")=="all"?"selected":""?> value="all"><?php Appl::_("all")?></option>
+            <option <?php echo getParam("type")==""?"selected":""?> value=""><?php Appl::_("Public")?></option>
+            <option <?php echo getParam("type")=="W"?"selected":""?> value="W"><?php Appl::_("User")?></option>
+            <option <?php echo getParam("type")=="R"?"selected":""?> value="R"><?php Appl::_("Root")?></option>
         </select>
     <?php endif;?>
 </div>
@@ -130,35 +131,14 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
     <button onclick="showImages()"><?php Appl::_("Show Images")?></button>
     <?php if (Config::isUserRoot() || Config::isUserView()) {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
+        <button onclick="$('#settings_div').slideDown('slow');"><span class="glyphicon glyphicon-cog"></span> <?php Appl::_("Settings")?></button>
     <?php } else {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
     <?php }?>
 </div>
-<div id="password_div" style="display:none" >
-    <input id="password"  type="password" placeholder="password" value=""/>
-    <button onclick="Cookie('password',$('#password').val());$('#password_div').slideUp('slow');location.reload();"><?php Appl::_("Save")?></button>
-    <button onclick="$('#password').attr('type', 'text');"><?php Appl::_("Show")?></button>
-    <button onclick="$('#password_div').slideUp('slow');"><?php Appl::_("Cancel")?></button>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="myModal" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title"></h4>
-            </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+<?php include "user.inc.php"; ?>
+<?php \maierlabs\lpfw\Appl::setApplJScript();?>
+<?php \maierlabs\lpfw\Appl::includeJs();?>
 </body>
 </html>
 
@@ -225,41 +205,6 @@ $systemMessage="Entries info:".$countInfo. " debug:".$countDebug." error:".$coun
             return this;
         };
 
-        //read (value=null) or write cookies
-        function Cookie(name,value) {
-            if (value==null) {
-                a = document.cookie +";";
-                while(a != "")
-                {
-                    var cookiename = a.substring(0,a.search("="));
-                    cookiename = regTrim(cookiename);
-                    var cookiewert = a.substring(a.search("=")+1,a.search(";"));
-                    cookiewert = regTrim(cookiewert);
-                    //if(cookiewert == "")
-                    //	{cookiewert = a.substring(a.search("=")+1,a.length);}
-                    if(name === cookiename) {
-                        return (decodeURIComponent(cookiewert));
-                    }
-                    i = a.search(";")+1;
-                    if(i == 0)
-                        i = a.length;
-                    a = a.substring(i,a.length);
-                }
-                return(null);
-            }
-            else {
-                document.cookie = name + "=" + escape (value) + "; expires=Mon, 23 Jul 2040 22:00:00 GMT";
-            }
-        }
-
-        function regTrim(s) {
-            if (s.substring(0,1)==" ") {
-                return s.substring(1,s.length);
-            }
-            else {
-                return s;
-            }
-        }
     </script>
 
 

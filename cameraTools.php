@@ -175,7 +175,7 @@ function zipImages($camName,$delete=true,$simulate=true) {
  * @return bool
  * @throws \PHPMailer\PHPMailer\Exception
  */
-function sendSmtpMail ($to,$text) {
+function sendSmtpMail ($to,$text,$tobcc=null) {
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
     $mail->IsSMTP(); // telling the class to use SMTP
@@ -189,7 +189,8 @@ function sendSmtpMail ($to,$text) {
     $mail->Password = Config::jc()->EMAIL_PASSWORD; // GMAIL password
 
     $mail->AddAddress($to);
-    $mail->addBCC(Config::jc()->EMAIL_SENDER);
+    if ($tobcc!=null)
+        $mail->addBCC($tobcc);
     $mail->SetFrom(Config::jc()->EMAIL_SENDER);
     $mail->Subject = Config::jc()->EMAIL_SUBJECT;
     $mail->msgHTML($text);

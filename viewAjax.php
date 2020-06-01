@@ -141,6 +141,7 @@ if ($action=="deleteday" && Config::isUserRoot()) {
         </div>
     </div>
     <div style="clear: both"></div>
+    <div class="resultDBoperation"></div>
     <?php if ($systemMessage!="") {?>
         <div id="systemMessage" style="background-color: lightgray;padding-bottom: 10px">
             <div style="background-color: #ffe030;padding: 5px;margin: 0px 10px 0px 10px;border-radius: 5px;">
@@ -228,16 +229,15 @@ if ($action=="deleteday" && Config::isUserRoot()) {
     <?php }?>
     <?php if (Config::isUserRoot() || Config::isUserView()) {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-out"></span> <?php Appl::_("Log out")?></button>
+        <button onclick="$('#settings_div').slideDown('slow');"><span class="glyphicon glyphicon-cog"></span> <?php Appl::_("Settings")?></button>
     <?php } else {?>
         <button onclick="$('#password').attr('type','password');$('#password_div').slideDown('slow');$('#password').val(Cookie('password'))"><span class="glyphicon glyphicon-log-in"></span> <?php Appl::_("Log in")?></button>
     <?php }?>
 </div>
-<div id="password_div" style="display:none" >
-    <input id="password"  type="password" placeholder="password" value=""/>
-    <button onclick="Cookie('password',$('#password').val());$('#password_div').slideUp('slow');location.reload();"><?php Appl::_("Save")?></button>
-    <button onclick="$('#password').attr('type', 'text');"><?php Appl::_("Show")?></button>
-    <button onclick="$('#password_div').slideUp('slow');"><?php Appl::_("Cancel")?></button>
-</div>
+<?php include "user.inc.php"; ?>
+<?php \maierlabs\lpfw\Appl::setApplJScript();?>
+<?php \maierlabs\lpfw\Appl::includeJs();?>
+
 <canvas id="canvas" width="1024" height="800" style="display: none"></canvas>
 </body>
 </html>
@@ -548,40 +548,6 @@ if ($action=="deleteday" && Config::isUserRoot()) {
         this.setDate(this.getDate() + days);
         return this;
     };
-
-    //read (value=null) or write cookies
-    function Cookie(name,value) {
-        if (value==null) {
-            a = document.cookie +";";
-            while(a != "")
-            {
-                var cookiename = a.substring(0,a.search("="));
-                cookiename = regTrim(cookiename);
-                var cookiewert = a.substring(a.search("=")+1,a.search(";"));
-                cookiewert = regTrim(cookiewert);
-                //if(cookiewert == "")
-                //	{cookiewert = a.substring(a.search("=")+1,a.length);}
-                if(name === cookiename) {
-                    return (decodeURIComponent(cookiewert));
-                }
-                i = a.search(";")+1;
-                if(i == 0)
-                    i = a.length;
-                a = a.substring(i,a.length);
-            }
-            return(null);
-        }
-        else {
-            document.cookie = name + "=" + escape (value) + "; expires=Mon, 23 Jul 2040 22:00:00 GMT";
-        }
-    }
-
-    function regTrim(s) {
-        if (s.substring(0,1)==" ") {
-            return s.substring(1,s.length);
-        }
-        return s;
-    }
 </script>
 
 <?php

@@ -10,7 +10,7 @@ include_once 'bifi.class.php';
 
 if (isset($_GET['camname'])) {
     $camname=$_GET['camname'];
-    if (!isset(Config::ja()["cameras"][$camname]) || !CConfig::ja()["cameras"][$camname]["webcam"]) {
+    if (!isset(Config::ja()["cameras"][$camname]) || !Config::ja()["cameras"][$camname]["webcam"]) {
         header("HTTP/1.0 400 Bad Request");
         echo("Cam not allowed as webcam!");
         die();

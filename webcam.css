@@ -68,13 +68,19 @@ button:hover {	background-color: #aaaaaa;}
 	border-radius:10px;
 }
 
-#password_div {
-	background-color:lightgray;
+#password_div, #settings_div  {
+	background-color:lightblue;
     text-align: center;
-    margin-top: 10px;
+    margin: 10px;
     border-radius: 10px;
     padding: 10px;
 }
+
+.settings  {display: initial;}
+.settings tr td  { padding:5px; }
+.settings tr:first-child   { border-bottom: 1px solid black }
+.settings tr td input[type=checkbox] {height: 22px; margin-top: 1px;width: 22px;}
+
 
 #slider, #actionslider { margin:10px; }
 

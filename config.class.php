@@ -37,11 +37,45 @@ class Config {
         return $ret;
     }
 
+    static function saveConfigJson($cameras,$newPassword) {
+        $json=json_decode(file_get_contents("config.json"));
+        if($newPassword!=null) {
+            if (self::isUserView()){
+                $json->user->view->password=$newPassword;
+                $json->user->view->changeDate=date("Y.m.d H:i:s");
+                $json->user->view->changeIP = $_SERVER["REMOTE_ADDR"];
+            }
+            if (self::isUserRoot()){
+                $json->user->root->password=$newPassword;
+                $json->user->root->changeDate=date("Y.m.d H:i:s");
+                $json->user->root->changeIP = $_SERVER["REMOTE_ADDR"];
+            }
+        }
+        foreach ($cameras as $camName => $camera) {
+            if ($camName!=$camera->name) {
+                $json->cameras->{$camera->name} = $json->cameras->{$camName};
+                unset($json->cameras->{$camName});
+            }
+            $json->cameras->{$camera->name}->alertEmail = $camera->alertEmail;
+            if (isset($camera->alertBccEmail))
+                $json->cameras->{$camera->name}->alertBccEmail = $camera->alertBccEmail;
+            $json->cameras->{$camera->name}->webcam = $camera->webcam;
+        }
+        $json->changeDate=date("Y.m.d H:i:s");
+        $json->changeIP = $_SERVER["REMOTE_ADDR"];
+        $json = json_encode($json,JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES);
+        return file_put_contents("config.json", $json);
+    }
+
+
     static function loadConfigJson() {
         if (self::$json==null) {
             self::$json=file_get_contents("config.json");
             $j = json_decode(self::$json);
-            $j->IMAGE_URL = "http://" . $_SERVER["SERVER_NAME"] . $j->IMAGE_URL;
+            if (is_object($j) && isset($j->IMAGE_URL))
+                $j->IMAGE_URL = "http://" . $_SERVER["SERVER_NAME"] . $j->IMAGE_URL;
+            else
+                die ("Error in config.json");
             self::$json = json_encode($j);
         }
     }

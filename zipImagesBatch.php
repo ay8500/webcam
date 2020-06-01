@@ -14,16 +14,17 @@ include_once Config::$lpfw.'logger.class.php';
 foreach (Config::ja()["cameras"] as $camName=> $camera) {
     if($camera["zip"]) {
         $ret = zipImages($camName,true,false);
+        $mailSentResult="";
         if (isset($camera["alertEmail"]) && count($ret->sendMail)>0) {
-            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail);
-        } else
-            $mailsSent=true;
+            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail,isset($camera["alertBccEmail"])?$camera["alertBccEmail"]:null);
+            $mailSentResult=$mailsSent?"ok":"error";
+        }
         $text = $camName . '=>  to be Zipped:' . $ret->tobeZipped ;
         $text .= ' Zipped:' . $ret->filesZipped;
         $text .= ' Deleted:' . $ret->deleted;
         $text .= " Days:" . $ret->daysZipped;
         $text .= " Mail pictures:" . count($ret->sendMail);
-        $text .= " Mails sent:" . ($mailsSent?"ok":"error");
+        $text .= " Mails sent:" . $mailSentResult;
         \maierlabs\lpfw\Logger::_($text, \maierlabs\lpfw\LoggerLevel::debug);
         echo($text . "<br/>\n");
     }
@@ -36,7 +37,7 @@ foreach (Config::ja()["cameras"] as $camName=> $camera) {
  * @param $to
  * @return boolean
  */
-function sendAlertMail($to,$camName,$pictureArray) {
+function sendAlertMail($to,$camName,$pictureArray,$tobcc=null) {
     $body = "<h2>".Config::jc()->TITLE."</h2>";
     $body .="<p>Alert pictures from camera: ".$camName."</p>";
     $date = new DateTime();
@@ -45,5 +46,5 @@ function sendAlertMail($to,$camName,$pictureArray) {
     }
     $body  = "<body><html>".$body."</html></body>";
 
-    return sendSmtpMail($to, $body);
+    return sendSmtpMail($to, $body, $tobcc);
 }

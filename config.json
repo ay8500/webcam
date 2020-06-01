@@ -1,74 +1,85 @@
 {
-	"cameras": {
-		"SV3C": {
-			"path": "cam/cam1/",
-			"patternRegEx": "[PA][0-9]{14}\\\\.jpg",
-			"zip": true,
-			"webcam": false,
-			"snap": "P",
-			"alert": "A"
-		},
-		"Kamera1": {
-			"path": "cam/FI9900P_00626E66039D/",
-			"patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
-			"zip": true,
-			"webcam": false,
-			"snap": "Schedule_",
-			"alert": "MDAlarm_",
-			"alertEmail": "code@blue-l.de"
-		},
-		"Kamera2": {
-			"path": "cam/FI9900P_C4D655408C9F/",
-			"patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
-			"zip": true,
-			"webcam": false,
-			"snap": "Schedule_",
-			"alert": "MDAlarm_"
-		},
-		"Thalmannsfeld": {
-			"path": "cam/FI9805W_00626E646465/",
-			"patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
-			"zip": true,
-			"webcam": true,
-			"snap": "Schedule_",
-			"alert": "MDAlarm_",
-			"alertEmail": "code@blue-l.de"
-		},
-		"testflat": {
-			"path": "test\\jpg\\",
-			"patternRegEx": ".*[.]jpg|.*[.]JPG",
-			"zip": false,
-			"webcam": true,
-			"slides": true
-		},
-		"test": {
-			"path": "test/pictures/",
-			"patternRegEx": ".*\\\\.jpg|.*\\\\.JPG",
-			"zip": true,
-			"webcam": true,
-			"alertEmail": "code@blue-l.de"
-		}
-	},
-	"user": {
-		"root": {
-			"password":"09358a859ea3f326558d72103edec2a8"
-		},
-		"view":{
-			"password": "e011d51843fe95fa05af3cdeb1ded601"
-		}
-	},
-	"TITLE":"Webcam by Levi",
-	"EMAIL_SENDER":"xxxxx@yyyyy.de",
-	"EMAIL_PASSWORD":"xxxxx",
-	"EMAIL_HOST":"smtp.yyyyy.de",
-	"EMAIL_PORT":"587",
-	"EMAIL_SUBJECT":"Webcam alert",
-	"MAX_COUNT_TO_ZIP":"10",
-	"IMAGE_ROOT_PATH":"c:\\xampp\\htdocs\\webcam\\",
-	"IMAGE_URL":"/webcam",
-	"CALENDAR_MIN_DISPLAY":-1,
-	"CALENDAR_MAX_DISPLAY":0,
-	"BATCH_DELETE_OLDER_THAN_DAYS":30000
+    "cameras": {
+        "SV3C": {
+            "path": "cam/cam1/",
+            "patternRegEx": "[PA][0-9]{14}\\\\.jpg",
+            "zip": true,
+            "webcam": false,
+            "snap": "P",
+            "alert": "A",
+            "alertEmail": "",
+            "alertBccEmail": "ll@ww.de"
+        },
+        "Kamera2": {
+            "path": "cam/FI9900P_C4D655408C9F/",
+            "patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
+            "zip": true,
+            "webcam": false,
+            "snap": "Schedule_",
+            "alert": "MDAlarm_",
+            "alertEmail": "",
+            "alertBccEmail": ""
+        },
+        "Thalmannsfeld": {
+            "path": "cam/FI9805W_00626E646465/",
+            "patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
+            "zip": true,
+            "webcam": true,
+            "snap": "Schedule_",
+            "alert": "MDAlarm_",
+            "alertEmail": "xxxy@blue-l.de",
+            "alertBccEmail": ""
+        },
+        "testflat": {
+            "path": "test\\jpg\\",
+            "patternRegEx": ".*[.]jpg|.*[.]JPG",
+            "zip": false,
+            "webcam": false,
+            "slides": true,
+            "alertEmail": "levi@blue-l.de",
+            "alertBccEmail": ""
+        },
+        "test": {
+            "path": "test/pictures/",
+            "patternRegEx": ".*\\\\.jpg|.*\\\\.JPG",
+            "zip": true,
+            "webcam": false,
+            "alertEmail": "code@blue-l.de",
+            "alertBccEmail": ""
+        },
+        "Kamera1": {
+            "path": "cam/FI9900P_00626E66039D/",
+            "patternRegEx": "(Schedule_)[0-9\\\\-]{15}\\\\.jpg|(MDAlarm_)[0-9\\\\-]{15}\\\\.jpg",
+            "zip": true,
+            "webcam": false,
+            "snap": "Schedule_",
+            "alert": "MDAlarm_",
+            "alertEmail": "code@blue-l.de",
+            "alertBccEmail": ""
+        }
+    },
+    "user": {
+        "root": {
+            "password": "09358a859ea3f326558d72103edec2a8",
+            "changeDate": "2020.06.01 01:19:38",
+            "changeIP": "::1"
+        },
+        "view": {
+            "password": "e011d51843fe95fa05af3cdeb1ded601"
+        }
+    },
+    "TITLE": "Webcam by Levi",
+    "EMAIL_SENDER": "xxxxx@yyyyy.de",
+    "EMAIL_PASSWORD": "xxxxx",
+    "EMAIL_HOST": "smtp.yyyyy.de",
+    "EMAIL_PORT": "587",
+    "EMAIL_SUBJECT": "Webcam alert",
+    "MAX_COUNT_TO_ZIP": "10",
+    "IMAGE_ROOT_PATH": "c:\\xampp\\htdocs\\webcam\\",
+    "IMAGE_URL": "/webcam",
+    "CALENDAR_MIN_DISPLAY": -1,
+    "CALENDAR_MAX_DISPLAY": 0,
+    "BATCH_DELETE_OLDER_THAN_DAYS": 30000,
+    "changeDate": "2020.06.01 01:19:38",
+    "changeIP": "::1"
 }
-
-
