@@ -200,7 +200,7 @@ if ($action=="deleteday" && Config::isUserRoot()) {
 </div>
 <div class="cam-right">
     <div id="camimage">
-        <img id="image" src=""  title="" />
+        <img style="z-index: 100; left:0px; top:0px; position: relative;" id="image" src=""  title="" />
     </div>
 </div>
 <div class="footer">
