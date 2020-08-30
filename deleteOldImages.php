@@ -22,7 +22,7 @@ $day->modify('-'.Config::jc()->BATCH_DELETE_OLDER_THAN_DAYS.' day');
 $ret = array();
 $ret["action"]=$action;
 
-foreach (CConfig::ja()["cameras"] as $camName=> $camera) {
+foreach (Config::ja()["cameras"] as $camName=> $camera) {
     $count=0;
     $path =Config::jc()->IMAGE_ROOT_PATH.$camera["path"];
     $directory = dir($path);
