@@ -70,12 +70,17 @@ class Config {
 
     static function loadConfigJson() {
         if (self::$json==null) {
-            self::$json=file_get_contents("config.json");
+            if (file_exists("config.json"))
+                $fileName="config.json";
+            elseif (file_exists(__DIR__."\config.json"))
+                $fileName =__DIR__."\config.json";
+
+             self::$json=file_get_contents($fileName);
             $j = json_decode(self::$json);
             if (is_object($j) && isset($j->IMAGE_URL))
                 $j->IMAGE_URL = "http://" . $_SERVER["SERVER_NAME"] . $j->IMAGE_URL;
             else
-                die ("Error in config.json");
+                die ("Error in config.json path=".$fileName);
             self::$json = json_encode($j);
         }
     }

@@ -35,10 +35,16 @@ if (isset($_GET['deleted']) && $_GET['deleted']!="" )
 else
     $deleted=false;
 
+//Just for testing
+if (isset($_GET["password"]))
+    $_COOKIE["password"]=$_GET["password"];
+
 $camera = isset(Config::ja()["cameras"][$camname])?Config::ja()["cameras"][$camname]:null;
 $images_array= array();
 if($camera==null || (!Config::isUserRoot()  && !Config::isUserView() && !$camera["webcam"])) {
     echo(json_encode($images_array));
+    if (isset($_GET["password"]))
+        $_COOKIE["password"]="";
     die();
 } else {
     $filter=$type;

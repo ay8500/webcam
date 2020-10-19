@@ -34,7 +34,7 @@
             "path": "test\\jpg\\",
             "patternRegEx": ".*[.]jpg|.*[.]JPG",
             "zip": false,
-            "webcam": false,
+            "webcam": true,
             "slides": true,
             "alertEmail": "levi@blue-l.de",
             "alertBccEmail": ""
