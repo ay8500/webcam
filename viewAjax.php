@@ -43,7 +43,7 @@ $userRightTextForLogging=(Config::isUserRoot()?'R':'').(Config::isUserView()?'W'
 
 //Testmail
 if ($action=="testmail" && Config::isUserRoot()) {
-    $text = "<html><body><h2>Testmail</h2>Date:".date("l Y.F.d h:i:s");
+    $text = "<html><body><h2>Testmail</h2>Date:".date("l Y.F.d H:i:s");
     $text .= "<p>Disk free space:".number_format(disk_free_space('./')/1024/1024,2,',','.')." Mbyte</p>";
     $text .= "</body></html>";
     $ret=sendSmtpMail("levi@blue-l.de",$text);
