@@ -36,7 +36,7 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
     private function getUrl() {
         if( !is_array($_SERVER) || !isset($_SERVER["HTTP_REFERER"]))
             return null;
-        $url=$_SERVER["HTTP_REFERER"];
+        $url=pathinfo($_SERVER["HTTP_REFERER"], PATHINFO_DIRNAME);
         $url = substr($url,0,strlen($url)-strlen("phpunit/"));
         return $url."/webcam/";
     }
