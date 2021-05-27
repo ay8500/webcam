@@ -12,9 +12,7 @@ class AjaxTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testGetImageList() {
-        $url=$this->getUrl();
-        if($url==null)
-            return;
+        $url="/webcam/";
         $ret=$this->callTestUrl($url."ajaxGetImageList",false);
         $this->assertNotNull($ret);
         $this->assertSame("Parameter camname ist empty",$ret->content );
