@@ -174,7 +174,7 @@ if (Config::isUserRoot()) {
             text += "<?php Appl::_("Country")?>:"+data.x.country_name+"<br/>";
             text +="<?php Appl::_("Zipcode")?>:"+data.x.zip+"<br/>";
             text +="<?php Appl::_("City")?>:"+data.x.city+"<br/>";
-            text += "<img src=\""+data.x.location.country_flag+"\" style=\"height:35px\" /><br/>";
+            //text += "<img src=\""+data.x.location.country_flag+"\" style=\"height:35px\" /><br/>";
             text += "ISP:"+data.isp+"<br/>";
             text += "ORG:"+data.org+"<br/>";
             text += "AS:"+data.as+"<br/>";

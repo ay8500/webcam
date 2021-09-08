@@ -200,7 +200,7 @@ if ($action=="deleteday" && Config::isUserRoot()) {
 </div>
 <div class="cam-right">
     <div id="camimage">
-        <img style="z-index: 100; left:0px; top:0px; position: relative;" id="image" src=""  title="" />
+        <img style="z-index: 100; left:0px; top:0px; position: relative; width:100%" id="image" src=""  title="" />
     </div>
 </div>
 <div class="footer">
@@ -521,9 +521,15 @@ if ($action=="deleteday" && Config::isUserRoot()) {
     }
 
     function getTime(s) {
+        if (s === undefined)
+            return "";
+        var patt =/[PA]\d{12,}.*/;
         k=s.split("-");
         if (k.length==2) {
             return k[1].substr(0,2)+":"+k[1].substr(2,2)+":"+k[1].substr(4,2);
+        }
+        else if (patt.test(s) ) {
+            return s.substr(7,2)+":"+s.substr(9,2)+":"+s.substr(11,2);
         }
         else return s;
     }

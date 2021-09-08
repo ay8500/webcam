@@ -6,7 +6,7 @@
 
 include 'config.class.php';
 include_once 'bifi.class.php';
-include __DIR__.'/../lpfw/logger.class.php';
+include_once __DIR__.'/../lpfw/logger.class.php';
 
 header('Content-Type: application/json');
 

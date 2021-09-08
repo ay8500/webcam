@@ -42,10 +42,12 @@ class BiFi {
      * Adds a file to archive
      * @param string $fileName The path to the file to add.
      * @param string $name This is the local name inside the archive
-     * @return boolean
+     * @return boolean false if file not exist or name already in the big file
      */
     public function addFile($fileName,$name) {
         if (!file_exists($fileName))
+            return false;
+        if ($this->getFileInfo("name",$name)!=null)
             return false;
 
         $fpData=fopen($this->fileName.self::BIFI_DATA_EXTENSION, "a");
