@@ -17,7 +17,7 @@ foreach (Config::ja()["cameras"] as $camName=> $camera) {
         $mailSentResult="";
         if (isset($camera["alertEmail"]) && $camera["alertEmail"]!="" && count($ret->sendMail)>0) {
             $toCC=(isset($camera["alertBccEmail"]) && $camera["alertBccEmail"]!="")?$camera["alertBccEmail"]:null;
-            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail,$toCC);
+            $mailsSent=sendAlertMail($camera["alertEmail"],$camName,$ret->sendMail,$toCC,true);
             $mailSentResult=$mailsSent?"ok":"error";
         }
         $text = $camName . '=>  to be Zipped:' . $ret->tobeZipped ;
@@ -38,12 +38,17 @@ foreach (Config::ja()["cameras"] as $camName=> $camera) {
  * @param $to
  * @return boolean
  */
-function sendAlertMail($to,$camName,$pictureArray,$tobcc=null) {
+function sendAlertMail($to,$camName,$pictureArray,$tobcc=null,$onlyFirstAndLast) {
     $body = "<h2>".Config::jc()->TITLE."</h2>";
     $body .="<p>Alert pictures from camera: ".$camName."</p>";
     $date = new DateTime();
-    foreach ($pictureArray as $picture) {
-        $body .='<img src="'.Config::jc()->IMAGE_URL.'/getZipCamImage?camname='.$camName.'&imagename='.basename($picture).'&date='.$date->format("Ymd").'"/>';
+    foreach ($pictureArray as $id=>$picture) {
+        if (!$onlyFirstAndLast || $id==0 || $id==sizeof($pictureArray)-1) {
+            $body .= '<img src="' . Config::jc()->IMAGE_URL . '/getZipCamImage?camname=' . $camName . '&imagename=' . basename($picture) . '&date=' . $date->format("Ymd") . '"/>';
+        }
+    }
+    if ($onlyFirstAndLast) {
+        $body .= 'Number of taken pictures:' . sizeof($pictureArray);
     }
     $body  = "<body><html>".$body."</html></body>";
 
